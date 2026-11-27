@@ -4,35 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Village Map</title>
+<meta name="theme-color" content="#d8b283">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Village Map">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Rye&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
-:root{--kraft:#d6b07c;--ink:#2b1a10;--cream:#fdf0d5;--paper:#fff8e8;--accent:#c4452d;--line:#2b1a10;--mut:#7a5c44}
+:root{--kraft:#d8b283;--ink:#2a1810;--cream:#fff2d8;--paper:#fff2d8;--accent:#d6402b;--line:#2a1810;--mut:#6a4636;--pink:#e2457f}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--kraft);color:var(--ink);font:16px/1.4 "DM Sans",system-ui,sans-serif}
 button,input,select,textarea{font:inherit;color:inherit}
 header{position:fixed;top:0;left:0;right:0;z-index:20;background:var(--kraft);border-bottom:3px solid var(--line);padding:calc(8px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-left,0px)) 8px max(14px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
 .brand{flex:1;min-width:0}
-.brand h1{font:400 26px/1 Rye,Georgia,serif;margin:0;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand h1{font:400 30px/1 Rye,Georgia,serif;margin:0;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:2px 2px 0 #ee7aa3}
 .brand p{margin:2px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
 .acct{border:2px solid var(--line);background:var(--cream);border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--line)}
 #chips{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));left:0;right:0;z-index:15;display:flex;gap:8px;overflow-x:auto;padding:8px max(14px,env(safe-area-inset-left,0px));scrollbar-width:none}
 #chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-weight:600;font-size:14px;cursor:pointer}
+.chip{flex:none;border:2px solid var(--line);background:var(--cream);border-radius:14px 3px 14px 3px;padding:7px 14px;font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;box-shadow:2px 2px 0 var(--line)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--cream)}
+.list button.item b{display:block;margin-bottom:2px}
+.list button.item span{display:block}
 #map{position:absolute;inset:0}
-.maplibregl-canvas{filter:sepia(.55) saturate(1.15) contrast(.97)}
 .maplibregl-ctrl-bottom-right{bottom:96px}
 #dock{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:10px;padding:10px max(14px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px))}
-.big{flex:1;border:3px solid var(--line);border-radius:14px;padding:13px 10px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
-.big.find{background:var(--paper)}
+.big{flex:1;border:3px solid var(--line);border-radius:3px 14px 3px 14px;text-transform:uppercase;letter-spacing:.05em;padding:13px 10px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
+.big.find{background:var(--cream)}
 .big.add{background:var(--accent);color:#fff}
-.pin{width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--paper);border:3px solid var(--line);display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--line);cursor:pointer}
-.pin span{transform:rotate(45deg);font-size:19px;line-height:1}
-.pin.pending{opacity:.55;border-style:dashed}
-.pin.temp{background:var(--accent)}
-#sheet{position:fixed;left:0;right:0;bottom:0;z-index:40;max-height:86vh;overflow-y:auto;background:var(--paper);border:3px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:6px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 0 rgba(43,26,16,.2)}
+.pin{position:relative;width:46px;height:54px;cursor:pointer}
+.pin .tail{position:absolute;left:50%;bottom:6px;width:14px;height:14px;background:var(--ink);transform:translateX(-50%) rotate(45deg)}
+.pin .ring{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid var(--ink);background:var(--cream);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pin .ring img{width:100%;height:100%;object-fit:cover}
+.pin.pending{opacity:.65}
+.pin.pending .ring{border-style:dashed}
+.pin.temp .ring{background:var(--accent)}
+#sheet{background-image:none;position:fixed;left:0;right:0;bottom:0;z-index:40;max-height:86vh;overflow-y:auto;background:var(--kraft);border:3px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:6px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 0 rgba(43,26,16,.2)}
 .grab{width:44px;height:5px;border-radius:3px;background:var(--line);opacity:.35;margin:6px auto 10px}
 .shead{display:flex;align-items:center;gap:8px}
 .shead h2{flex:1;margin:0;font:400 24px/1.1 Rye,Georgia,serif}
@@ -47,16 +56,24 @@ textarea{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .mut{color:var(--mut);font-size:14px}
 .gal{display:flex;gap:8px;overflow-x:auto;margin:10px 0;scroll-snap-type:x mandatory}
-.gal img{height:170px;border-radius:10px;border:2px solid var(--line);scroll-snap-align:start;flex:none;max-width:84%;object-fit:cover}
-.tag{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;margin:2px 4px 2px 0;background:var(--cream)}
-.card{border:2px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;background:var(--cream)}
+.gal img{height:170px;border-radius:3px;border:2px solid var(--line);scroll-snap-align:start;flex:none;max-width:84%;object-fit:cover}
+.tag{display:inline-block;border:2px solid var(--line);border-radius:14px 3px 14px 3px;padding:2px 10px;font-size:13px;font-weight:600;margin:2px 4px 2px 0;background:var(--cream)}
+.card{border:2px solid var(--line);border-radius:3px;padding:10px 12px;margin:10px 0;background:var(--cream);box-shadow:3px 3px 0 var(--line)}
 .card b{display:block}
-.list button.item{display:block;width:100%;text-align:left;border:2px solid var(--line);background:var(--cream);border-radius:12px;padding:10px 12px;margin:8px 0;cursor:pointer}
+.list button.item{display:block;width:100%;text-align:left;border:2px solid var(--line);background:var(--cream);border-radius:3px;padding:10px 12px;margin:10px 0;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:var(--cream);padding:10px 16px;border-radius:12px;max-width:90%;text-align:center;font-weight:600}
 #banner{position:fixed;left:50%;transform:translateX(-50%);top:calc(112px + env(safe-area-inset-top,0px));z-index:30;background:var(--accent);color:#fff;border:3px solid var(--line);border-radius:12px;padding:8px 14px;font-weight:700;text-align:center}
 .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid var(--line)}
 [hidden]{display:none!important}
+.gal img{cursor:zoom-in}
+.lb{position:fixed;inset:0;z-index:9999;background:rgba(20,12,6,.94);display:flex;align-items:center;justify-content:center;touch-action:pan-y}
+.lb img{max-width:100%;max-height:100%;object-fit:contain}
+.lb button{position:absolute;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:50%;width:48px;height:48px;font-size:26px;line-height:1;cursor:pointer}
+.lb .x{top:max(14px,env(safe-area-inset-top,0px));right:14px}
+.lb .pv{left:10px;top:50%;margin-top:-24px}
+.lb .nx{right:10px;top:50%;margin-top:-24px}
+.lb .ct{position:absolute;bottom:max(16px,env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#fff;font-size:14px}
 </style>
 </head>
 <body>
@@ -126,7 +143,7 @@ function safeWeb(u){
   try{var x=new URL(u);return (x.protocol==="https:"||x.protocol==="http:")?x.href:""}catch(e){return ""}
 }
 function cleanIg(s){
-  s=(s||"").trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,"").replace(/^@/,"").split(/[/?#]/)[0];
+  s=(s||"").trim().replace(/^(https?:\/\/)?((www|m)\.)?(instagram\.com|instagr\.am)\/?/i,"").replace(/^@/,"").split(/[/?#\s]/)[0];
   return /^[A-Za-z0-9._]{1,30}$/.test(s)?s:"";
 }
 function distKm(a,b,c,d){
@@ -140,7 +157,40 @@ var user=null,isAdmin=false,places=[],photos={},markers=[];
 var fCat="",fInd=false,fPend=false,adding=false,tempMarker=null,tempLL=null,here=null;
 
 /* ---------- map ---------- */
-var map=new maplibregl.Map({container:"map",style:"https://tiles.openfreemap.org/styles/positron",center:START,zoom:12,attributionControl:{compact:true}});
+var STYLE_URL="https://tiles.openfreemap.org/styles/positron";
+function kraftStyle(st){
+  var C={land:"#ead3a6",water:"#e2457f",park:"#6aa062",bld:"#e8b99a",road:"#fff6e2",casing:"#c9482f",ink:"#2a1810"};
+  st.layers.forEach(function(l){
+    var sl=l["source-layer"]||"",id=l.id||"",p=l.paint=l.paint||{};
+    try{
+    if(l.type==="background"){p["background-color"]=C.land}
+    else if(l.type==="fill"){
+      var col=C.land;
+      if(sl==="water")col=C.water;
+      else if(sl==="park"||sl==="landcover"||/park|wood|grass|forest|pitch|cemetery|golf/.test(id))col=C.park;
+      else if(sl==="building"||/building/.test(id))col=C.bld;
+      p["fill-color"]=col;delete p["fill-pattern"];
+      if(col===C.park)p["fill-opacity"]=.85;
+    }
+    else if(l.type==="line"){
+      if(sl==="waterway"||/waterway|river|stream|canal/.test(id)){p["line-color"]=C.water}
+      else if(sl==="transportation"||/road|street|path|bridge|tunnel|motorway|rail/.test(id)){
+        if(/rail/.test(id))p["line-color"]=C.ink;
+        else if(/casing|outline/.test(id))p["line-color"]=C.casing;
+        else p["line-color"]=C.road;
+      }
+      else if(sl==="boundary"||/boundary/.test(id)){p["line-color"]="#a8805a"}
+    }
+    else if(l.type==="symbol"){
+      p["text-color"]=C.ink;p["text-halo-color"]=C.land;p["text-halo-width"]=1.4;
+    }
+    else if(l.type==="fill-extrusion"){p["fill-extrusion-color"]=C.bld}
+    }catch(e){}
+  });
+  return st;
+}
+var map=new maplibregl.Map({container:"map",style:{version:8,sources:{},layers:[{id:"bg",type:"background",paint:{"background-color":"#ead3a6"}}]},center:START,zoom:12,attributionControl:{compact:true}});
+fetch(STYLE_URL).then(function(r){return r.json()}).then(function(st){map.setStyle(kraftStyle(st))}).catch(function(){map.setStyle(STYLE_URL)});
 map.addControl(new maplibregl.NavigationControl({showCompass:false}),"bottom-right");
 var geo=new maplibregl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:false});
 map.addControl(geo,"bottom-right");
@@ -233,14 +283,16 @@ function draw(){
   markers.forEach(function(m){m.remove()});markers=[];
   visible().forEach(function(p){
     var c=catOf(p.category);
-    var el=h("div",{class:"pin"+(p.status!=="approved"?" pending":""),role:"button","aria-label":p.name},[h("span",{text:c.icon})]);
+    var ph0=(photos[p.id]||[])[0];
+    var ring=h("div",{class:"ring"},[ph0?h("img",{src:photoUrl(ph0),alt:"",loading:"lazy",onerror:function(){this.remove();ring.textContent=c.icon}}):c.icon]);
+    var el=h("div",{class:"pin"+(p.status!=="approved"?" pending":""),role:"button","aria-label":p.name},[h("div",{class:"tail"}),ring]);
     el.addEventListener("click",function(ev){ev.stopPropagation();if(!adding)openPlace(p)});
     markers.push(new maplibregl.Marker({element:el,anchor:"bottom"}).setLngLat([p.lng,p.lat]).addTo(map));
   });
 }
 function showTemp(){
   if(tempMarker)tempMarker.remove();
-  var el=h("div",{class:"pin temp"},[h("span",{text:"📍"})]);
+  var el=h("div",{class:"pin temp"},[h("div",{class:"tail"}),h("div",{class:"ring",text:"📍"})]);
   tempMarker=new maplibregl.Marker({element:el,anchor:"bottom"}).setLngLat(tempLL).addTo(map);
 }
 
@@ -268,10 +320,30 @@ $("findBtn").addEventListener("click",function(){
 
 /* ---------- place sheet ---------- */
 function stars(n){var s="";for(var i=1;i<=5;i++)s+=i<=n?"★":"☆";return s}
+function openLightbox(urls,start,alt){
+  var i=start,box=h("div",{class:"lb"}),img=h("img",{alt:alt||""}),ct=h("div",{class:"ct"});
+  function show(){img.src=urls[i];ct.textContent=urls.length>1?(i+1)+" of "+urls.length:""}
+  function close(){box.remove();document.removeEventListener("keydown",key)}
+  function go(d){i=(i+d+urls.length)%urls.length;show()}
+  function key(e){if(e.key==="Escape")close();else if(e.key==="ArrowLeft")go(-1);else if(e.key==="ArrowRight")go(1)}
+  var x0=null;
+  box.addEventListener("touchstart",function(e){x0=e.touches[0].clientX},{passive:true});
+  box.addEventListener("touchend",function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(urls.length>1&&Math.abs(dx)>50)go(dx<0?1:-1)},{passive:true});
+  box.addEventListener("click",function(e){if(e.target===box||e.target===img)close()});
+  box.appendChild(img);
+  box.appendChild(h("button",{class:"x",type:"button","aria-label":"Close",text:"×",onclick:close}));
+  if(urls.length>1){
+    box.appendChild(h("button",{class:"pv",type:"button","aria-label":"Previous",text:"‹",onclick:function(){go(-1)}}));
+    box.appendChild(h("button",{class:"nx",type:"button","aria-label":"Next",text:"›",onclick:function(){go(1)}}));
+  }
+  box.appendChild(ct);
+  document.addEventListener("keydown",key);
+  document.body.appendChild(box);show();
+}
 function openPlace(p){
   var c=catOf(p.category),nodes=[];
   var ph=photos[p.id]||[];
-  if(ph.length)nodes.push(h("div",{class:"gal"},ph.map(function(path){return h("img",{src:photoUrl(path),alt:p.name,loading:"lazy"})})));
+  if(ph.length)nodes.push(h("div",{class:"gal"},ph.map(function(path,i){return h("img",{src:photoUrl(path),alt:p.name,loading:"lazy",onclick:function(){openLightbox(ph.map(photoUrl),i,p.name)}})})));
   var tags=[h("span",{class:"tag",text:c.icon+" "+c.label})];
   if(p.independent)tags.push(h("span",{class:"tag",text:"★ Independent"}));
   if(p.village)tags.push(h("span",{class:"tag",text:"📍 "+p.village}));
@@ -313,7 +385,13 @@ function loadReviews(p,box){
 }
 function reviewForm(p,box){
   if(!user)return h("button",{class:"btn",type:"button",text:"Sign in to leave a review",onclick:openAuth});
-  var sel=h("select",{},[5,4,3,2,1].map(function(n){return h("option",{value:String(n),text:stars(n)})}));
+  var sel={value:"5"};
+  var starBtns=[1,2,3,4,5].map(function(n){
+    return h("button",{type:"button","aria-label":n+" star"+(n>1?"s":""),style:"background:none;border:0;padding:4px 6px;font-size:34px;line-height:1;cursor:pointer;color:inherit",text:"★",onclick:function(){sel.value=String(n);paint()}});
+  });
+  function paint(){starBtns.forEach(function(s,i){s.textContent=i<parseInt(sel.value,10)?"★":"☆"})}
+  paint();
+  var starRow=h("div",{style:"margin:4px 0 8px"},starBtns);
   var txt=h("textarea",{maxlength:"500",placeholder:"What was it like? Any tips?"});
   var b=h("button",{class:"btn dark",type:"button",text:"Post review"});
   b.addEventListener("click",function(){
@@ -324,7 +402,7 @@ function reviewForm(p,box){
       toast("Thanks for your review!");loadReviews(p,box);
     });
   });
-  return h("div",{style:"margin-top:12px"},[h("label",{text:"Your review (one per place)"}),sel,txt,h("div",{style:"margin-top:8px"},[b])]);
+  return h("div",{style:"margin-top:12px"},[h("label",{text:"Your review (one per place)"}),starRow,txt,h("div",{style:"margin-top:8px"},[b])]);
 }
 function setStatus(p,status){
   var patch={status:status};if(status==="approved")patch.approved_at=new Date().toISOString();
@@ -367,7 +445,6 @@ function openAddForm(){
   $("banner").hidden=true;picked=[];
   var name=h("input",{type:"text",maxlength:"120",placeholder:"What is it called?",autocomplete:"off"});
   var cat=h("select",{},CATS.map(function(c){return h("option",{value:c.id,text:c.icon+" "+c.label})}));
-  var village=h("input",{type:"text",maxlength:"80",placeholder:"e.g. Romsey, Sanremo",autocomplete:"off"});
   var note=h("textarea",{maxlength:"1000",placeholder:"What's there? Why go?"});
   var ind=h("input",{type:"checkbox",id:"ind"});
   var web=h("input",{type:"text",maxlength:"200",placeholder:"www.example.co.uk",inputmode:"url",autocomplete:"off"});
@@ -386,8 +463,9 @@ function openAddForm(){
   go.addEventListener("click",function(){
     var nm=name.value.trim();
     if(!nm){msg.textContent="Please give it a name.";return}
+    if(ig.value.trim()&&!cleanIg(ig.value)){msg.textContent="I couldn't read that Instagram name. Try just the handle, like cambridgecyclesmith.";return}
     go.disabled=true;msg.textContent="Saving…";
-    var row={name:nm,category:cat.value,note:note.value.trim()||null,village:village.value.trim()||null,independent:ind.checked,
+    var row={name:nm,category:cat.value,note:note.value.trim()||null,independent:ind.checked,
       website:safeWeb(web.value)||null,instagram:cleanIg(ig.value)||null,video_url:safeWeb(vid.value)||null,
       lat:tempLL.lat,lng:tempLL.lng,status:isAdmin?"approved":"pending"};
     if(isAdmin)row.approved_at=new Date().toISOString();
@@ -413,7 +491,6 @@ function openAddForm(){
     h("p",{class:"mut",text:"Share what you found."}),
     h("label",{text:"Name"}),name,
     h("label",{text:"Type"}),cat,
-    h("label",{text:"Which village or town?"}),village,
     h("label",{text:"Notes"}),note,
     h("div",{class:"row",style:"margin-top:12px"},[ind,h("label",{for:"ind",style:"margin:0",text:"Independent (not a chain)"})]),
     h("label",{text:"Website (optional)"}),web,
