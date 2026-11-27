@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Village Map</title>
+<meta name="theme-color" content="#d8b283">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Village Map">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Rye&family=Caprasimo&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+:root{--kraft:#d8b283;--ink:#2a1810;--cream:#fff2d8;--paper:#fff2d8;--accent:#d6402b;--line:#2a1810;--mut:#6a4636;--pink:#e2457f}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--kraft);color:var(--ink);font:16px/1.4 "DM Sans",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:fixed;top:0;left:0;right:0;z-index:20;background:var(--kraft);border-bottom:3px solid var(--line);padding:calc(8px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-left,0px)) 8px max(14px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
+.brand{flex:1;min-width:0}
+.brand h1{font:400 30px/1 Rye,Georgia,serif;margin:0;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:2px 2px 0 #ee7aa3}
+.brand p{margin:2px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+.acct{border:2px solid var(--line);background:var(--cream);border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--line)}
+#chips{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));left:0;right:0;z-index:15;display:flex;gap:8px;overflow-x:auto;padding:8px max(14px,env(safe-area-inset-left,0px));scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:2px solid var(--line);background:var(--cream);border-radius:14px 3px 14px 3px;padding:7px 14px;font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;box-shadow:2px 2px 0 var(--line)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--cream)}
+.list button.item b{display:block;margin-bottom:2px}
+.list button.item span{display:block}
+#map{position:absolute;inset:0}
+.maplibregl-ctrl-bottom-right{bottom:96px}
+#dock{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:10px;padding:10px max(14px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px))}
+.big{flex:1;border:3px solid var(--line);border-radius:3px 14px 3px 14px;text-transform:uppercase;letter-spacing:.05em;padding:13px 10px;font-weight:700;font-size:16px;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
+.big.find{background:var(--cream)}
+.big.add{background:var(--accent);color:#fff}
+.pin{position:relative;width:46px;height:54px;cursor:pointer}
+.pin .tail{position:absolute;left:50%;bottom:6px;width:14px;height:14px;background:var(--ink);transform:translateX(-50%) rotate(45deg)}
+.pin .ring{position:relative;width:46px;height:46px;border-radius:50%;border:3px solid var(--ink);background:var(--cream);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pin .ring img{width:100%;height:100%;object-fit:cover}
+.pin.pending{opacity:.65}
+.pin.pending .ring{border-style:dashed}
+.pin.temp .ring{background:var(--accent)}
+#sheet{background-image:none;position:fixed;left:0;right:0;bottom:0;z-index:40;max-height:86vh;overflow-y:auto;background:var(--kraft);border:3px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:6px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 0 rgba(43,26,16,.2)}
+.grab{width:44px;height:5px;border-radius:3px;background:var(--line);opacity:.35;margin:6px auto 10px}
+.shead{display:flex;align-items:center;gap:8px}
+.shead h2{flex:1;margin:0;font:400 24px/1.1 Rye,Georgia,serif}
+.x{border:2px solid var(--line);background:var(--cream);border-radius:50%;width:36px;height:36px;font-size:22px;line-height:1;cursor:pointer}
+label{display:block;font-weight:700;font-size:14px;margin:12px 0 4px}
+input[type=text],input[type=email],input[type=password],textarea,select{width:100%;border:2px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+textarea{min-height:84px;resize:vertical}
+.row{display:flex;gap:10px;align-items:center}
+.btn{border:3px solid var(--line);border-radius:12px;padding:11px 16px;font-weight:700;background:var(--cream);cursor:pointer;box-shadow:2px 2px 0 var(--line)}
+.btn.pri{background:var(--accent);color:#fff}
+.btn.dark{background:var(--ink);color:var(--cream)}
+.btn[disabled]{opacity:.5}
+.mut{color:var(--mut);font-size:14px}
+.gal{display:flex;gap:8px;overflow-x:auto;margin:10px 0;scroll-snap-type:x mandatory}
+.gal img{height:170px;border-radius:3px;border:2px solid var(--line);scroll-snap-align:start;flex:none;max-width:84%;object-fit:cover}
+.tag{display:inline-block;border:2px solid var(--line);border-radius:14px 3px 14px 3px;padding:2px 10px;font-size:13px;font-weight:600;margin:2px 4px 2px 0;background:var(--cream)}
+.card{border:2px solid var(--line);border-radius:3px;padding:10px 12px;margin:10px 0;background:var(--cream);box-shadow:3px 3px 0 var(--line)}
+.card b{display:block}
+.list button.item{display:block;width:100%;text-align:left;border:2px solid var(--line);background:var(--cream);border-radius:3px;padding:10px 12px;margin:10px 0;cursor:pointer;box-shadow:3px 3px 0 var(--line)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:var(--cream);padding:10px 16px;border-radius:12px;max-width:90%;text-align:center;font-weight:600}
+#banner{position:fixed;left:50%;transform:translateX(-50%);top:calc(112px + env(safe-area-inset-top,0px));z-index:30;background:var(--accent);color:#fff;border:3px solid var(--line);border-radius:12px;padding:8px 14px;font-weight:700;text-align:center}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid var(--line)}
+[hidden]{display:none!important}
+.gal img{cursor:zoom-in}
+.lb{position:fixed;inset:0;z-index:9999;background:rgba(20,12,6,.94);display:flex;align-items:center;justify-content:center;touch-action:pan-y}
+.lb img{max-width:100%;max-height:100%;object-fit:contain}
+.lb button{position:absolute;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:50%;width:48px;height:48px;font-size:26px;line-height:1;cursor:pointer}
+.lb .x{top:max(14px,env(safe-area-inset-top,0px));right:14px}
+.lb .pv{left:10px;top:50%;margin-top:-24px}
+.lb .nx{right:10px;top:50%;margin-top:-24px}
+.lb .ct{position:absolute;bottom:max(16px,env(safe-area-inset-bottom,0px));left:0;right:0;text-align:center;color:#fff;font-size:14px}
+
+/* ===== match the old map: poster look ===== */
+:root{--sun:#ee7aa3;--sun2:#f6a9c4;--orange:#d6402b;
+--c-cafes:#9a5a2e;--c-food:#b8261d;--c-books:#6b4fa8;--c-vintage:#d63a7a;--c-groceries:#7a8f1e;--c-cycling:#d6402b;--c-camping:#2f7a43;--c-wellbeing:#17909b;--c-outdoors:#c97f0a;--c-other:#4a6275}
+header{display:block;overflow:hidden;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-left,0px)) 14px;border-bottom:4px solid var(--ink)}
+header::before{content:"";position:absolute;right:-50px;top:-70px;width:230px;height:230px;border-radius:50%;background:var(--sun);z-index:0}
+header::after{content:"";position:absolute;right:-20px;top:-40px;width:170px;height:170px;border-radius:50%;background:var(--sun2);z-index:0}
+header>*{position:relative;z-index:1}
+.brand h1{font:400 clamp(34px,11vw,52px)/.95 Rye,Georgia,serif;text-transform:uppercase;letter-spacing:1px;text-shadow:none;overflow:visible;white-space:normal}
+.brand p{margin:8px 0 0;font-size:11px;letter-spacing:.2em}
+.acct{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:10px;z-index:2;border:2px solid var(--ink);border-radius:2px;background:#fff;box-shadow:none;padding:5px 10px;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+#chips{padding:10px max(18px,env(safe-area-inset-left,0px)) 12px;gap:12px;align-items:center;background:var(--kraft)}
+.cw{display:block;flex:none;filter:drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink)) drop-shadow(0 -1.5px 0 var(--ink))}
+.chip{--r:7px;border:0;box-shadow:none;transform:none;border-radius:0;padding:14px 24px;min-height:48px;background:var(--cream);color:var(--ink);text-transform:none;letter-spacing:0;font-size:15px;font-weight:700;-webkit-mask:linear-gradient(#000,#000) 50% 50%/calc(100% - var(--r)*1.4) calc(100% - var(--r)*1.4) no-repeat,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 0 0/calc(var(--r)*2) calc(var(--r)*2) round no-repeat,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 0 100%/calc(var(--r)*2) calc(var(--r)*2) round no-repeat,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 0 0/calc(var(--r)*2) calc(var(--r)*2) no-repeat round,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 100% 0/calc(var(--r)*2) calc(var(--r)*2) no-repeat round;mask:linear-gradient(#000,#000) 50% 50%/calc(100% - var(--r)*1.4) calc(100% - var(--r)*1.4) no-repeat,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 0 0/calc(var(--r)*2) calc(var(--r)*2) round no-repeat,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 0 100%/calc(var(--r)*2) calc(var(--r)*2) round no-repeat,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 0 0/calc(var(--r)*2) calc(var(--r)*2) no-repeat round,radial-gradient(circle at 50% 50%,#000 calc(var(--r) - .5px),#0000 var(--r)) 100% 0/calc(var(--r)*2) calc(var(--r)*2) no-repeat round}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--cream)}
+.big{border-radius:2px;box-shadow:4px 4px 0 var(--ink);font-size:14px;letter-spacing:.06em;padding:12px 10px}
+.big.find{background:var(--sun);color:var(--ink)}
+.big.add{background:#fff;color:var(--ink)}
+.maplibregl-ctrl-group{background:none!important;box-shadow:none!important;border:0!important}
+.maplibregl-ctrl-group button{width:42px!important;height:42px!important;border:3px solid var(--ink)!important;border-radius:2px!important;background:#fff!important;box-shadow:3px 3px 0 var(--ink)!important;margin-bottom:8px}
+.maplibregl-ctrl-group button+button{border-top:3px solid var(--ink)!important}
+.maplibregl-ctrl-attrib{background:#fffafb!important;border:2px solid var(--ink);font-weight:700}
+.compass{position:fixed;left:14px;bottom:96px;width:62px;height:62px;z-index:12;pointer-events:none;transform:rotate(-8deg)}
+.pin{position:relative;width:46px;height:54px;transform:none;background:none;border:0;box-shadow:none;border-radius:0;display:block}
+.pin:hover{transform:translateY(-3px)}
+.pin .tail{position:absolute;left:1px;top:0;bottom:auto;width:44px;height:44px;background:var(--cc,var(--ink));border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:3px 3px 0 var(--ink)}
+.pin .ring{position:absolute;left:8px;top:7px;width:30px;height:30px;border:2px solid #fff;border-radius:50%;background:var(--cc,var(--ink));box-shadow:none;font-size:15px;color:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.pin .ring img{width:100%;height:100%;object-fit:cover}
+.pin .pstar{position:absolute;right:-4px;top:-4px;width:22px;height:22px;border-radius:50%;background:var(--sun);border:2px solid var(--ink);color:var(--ink);font-size:12px;line-height:18px;text-align:center;z-index:2}
+.pin.pending{opacity:.7}.pin.pending .ring{border-style:dashed}
+.pin.temp{--cc:var(--accent)}
+#sheet{background:var(--kraft);border:0;border-top:4px solid var(--ink);border-radius:0;box-shadow:none}
+.shead h2{text-transform:uppercase;letter-spacing:.5px;font-size:30px;line-height:1}
+.x{border:3px solid var(--ink);border-radius:2px;background:#fff;box-shadow:2px 2px 0 var(--ink)}
+.tag{border-radius:2px;text-transform:uppercase;letter-spacing:.08em;font-size:11px;box-shadow:2px 2px 0 var(--ink)}
+.btn{border-radius:2px;text-transform:uppercase;letter-spacing:.06em;font-size:13px;box-shadow:3px 3px 0 var(--ink)}
+input[type=text],input[type=email],input[type=password],textarea,select{border-radius:2px}
+.card,.list button.item{background:#fff}
+#banner{background:var(--ink);color:#fff;border:3px solid #fff;border-radius:2px;box-shadow:4px 4px 0 var(--orange)}
+.plbl{white-space:nowrap;pointer-events:none;z-index:1;font-family:Caprasimo,"Cooper Black",Georgia,serif;font-weight:400;color:var(--ink);letter-spacing:.02em;line-height:1;text-shadow:0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 4px #ead3a6}
+.pin{z-index:3}
+</style>
+</head>
+<body>
+<header id="hdr">
+  <div class="brand"><h1 id="appname">Village Map</h1><p>The good stuff, mapped</p></div>
+  <button class="acct" id="acct" type="button">Sign in</button>
+</header>
+<div id="chips" role="toolbar" aria-label="Filters"></div>
+<div id="map"></div>
+<svg class="compass" viewBox="-30 -30 60 60" aria-hidden="true"><circle r="22" fill="#fffafb" stroke="#3b1f4a" stroke-width="2.5"/><path d="M0-27V27M-27 0H27" stroke="#3b1f4a" stroke-width="2"/><path d="M0-20L6 0 0 20-6 0Z" fill="#e8467c" stroke="#3b1f4a" stroke-width="1.5"/><text x="0" y="-31" font-family="Rye,serif" font-size="10" text-anchor="middle" fill="#3b1f4a">N</text></svg>
+<div id="banner" hidden>Tap the map where the place is</div>
+<div id="dock">
+  <button class="big find" id="findBtn" type="button">Find the good stuff</button>
+  <button class="big add" id="addBtn" type="button">+ Add to village</button>
+</div>
+<div id="sheet" hidden role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------- settings ---------- */
+var SUPABASE_URL="https://lzpwjcjjndmgfghnbtkp.supabase.co";
+var SUPABASE_KEY="sb_publishable_QHMqTIfakdLWCs0CGMpSSg_9b9XeFXC"; /* publishable key: safe in a web page */
+var APP_NAME="Village Map"; /* placeholder until the name is chosen */
+var START=[0.1218,52.2053]; /* Cambridge */
+
+var CATS=[
+ {id:"food",label:"Restaurants",icon:"🍽️"},
+ {id:"groceries",label:"Groceries",icon:"🛒"},
+ {id:"vintage",label:"Vintage / secondhand",icon:"🏺"},
+ {id:"books",label:"Books",icon:"📚"},
+ {id:"cafes",label:"Cafes",icon:"☕"},
+ {id:"wellbeing",label:"Wellbeing",icon:"🌿"},
+ {id:"camping",label:"Camping",icon:"⛺"},
+ {id:"cycling",label:"Cycling",icon:"🚲"},
+ {id:"other",label:"Other",icon:"⭐"}
+];
+function catOf(id){for(var i=0;i<CATS.length;i++)if(CATS[i].id===id)return CATS[i];return CATS[CATS.length-1]}
+
+var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/* ---------- helpers ---------- */
+function $(id){return document.getElementById(id)}
+function h(tag,attrs,kids){
+  var e=document.createElement(tag),k;
+  attrs=attrs||{};
+  for(k in attrs){
+    var v=attrs[k];
+    if(k==="class")e.className=v;
+    else if(k==="text")e.textContent=v;
+    else if(k.slice(0,2)==="on")e.addEventListener(k.slice(2),v);
+    else if(v!==false&&v!=null)e.setAttribute(k,v===true?"":v);
+  }
+  (kids||[]).forEach(function(c){if(c==null)return;e.appendChild(typeof c==="string"?document.createTextNode(c):c)});
+  return e;
+}
+var toastT=null;
+function toast(msg){var t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},4200)}
+function errText(e){return (e&&(e.message||e.error_description||e.code))||"Something went wrong"}
+function safeWeb(u){
+  u=(u||"").trim();if(!u)return "";
+  if(!/^https?:\/\//i.test(u))u="https://"+u;
+  try{var x=new URL(u);return (x.protocol==="https:"||x.protocol==="http:")?x.href:""}catch(e){return ""}
+}
+function cleanIg(s){
+  s=(s||"").trim().replace(/^(https?:\/\/)?((www|m)\.)?(instagram\.com|instagr\.am)\/?/i,"").replace(/^@/,"").split(/[/?#\s]/)[0];
+  return /^[A-Za-z0-9._]{1,30}$/.test(s)?s:"";
+}
+function distKm(a,b,c,d){
+  var R=6371,t=Math.PI/180,dl=(c-a)*t,dn=(d-b)*t;
+  var x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(dn/2)*Math.sin(dn/2);
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+
+/* ---------- state ---------- */
+var user=null,isAdmin=false,places=[],photos={},markers=[];
+var fCat="",fInd=false,fPend=false,adding=false,tempMarker=null,tempLL=null,here=null;
+
+/* ---------- layout ---------- */
+function layout(){var hh=$("hdr").offsetHeight;$("chips").style.top=hh+"px";$("banner").style.top=(hh+72)+"px"}
+window.addEventListener("resize",layout);window.addEventListener("load",layout);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(layout);
+layout();
+
+/* ---------- map ---------- */
+var STYLE_URL="https://tiles.openfreemap.org/styles/positron";
+var LABEL_LAYERS=[],labelMarkers=[],labelSig="",labelMiss=0,labelFallback=false;
+function kraftStyle(st){
+  LABEL_LAYERS=[];
+  var C={land:"#ead3a6",water:"#e2457f",park:"#6aa062",bld:"#e8b99a",road:"#fff6e2",casing:"#c9482f",ink:"#2a1810",rn:"#a81f55"};
+  function W(a,b,c){return ["interpolate",["exponential",1.55],["zoom"],8,a,13,b,18,c]}
+  st.layers.forEach(function(l){
+    var sl=l["source-layer"]||"",id=l.id||"",p=l.paint=l.paint||{};
+    try{
+    if(l.type==="background"){p["background-color"]=C.land}
+    else if(l.type==="fill"){
+      var col=C.land;
+      if(sl==="water")col=C.water;
+      else if(sl==="park"||sl==="landcover"||/park|wood|grass|forest|pitch|cemetery|golf|garden/.test(id))col=C.park;
+      else if(sl==="building"||/building/.test(id))col=C.bld;
+      p["fill-color"]=col;delete p["fill-pattern"];
+      if(col===C.park||col===C.water)p["fill-opacity"]=1;
+    }
+    else if(l.type==="line"){
+      var isRoad=(sl==="transportation"||/road|street|path|bridge|tunnel|motorway|highway|rail/.test(id));
+      if(sl==="waterway"||/waterway|river|stream|canal/.test(id)){p["line-color"]=C.water;p["line-width"]=W(1.5,9,28);p["line-opacity"]=1}
+      else if(isRoad){
+        if(/rail/.test(id)){p["line-color"]=C.ink;p["line-width"]=W(.6,1.4,3)}
+        else{
+          var big=/motorway|trunk|major|primary/.test(id),mid=/secondary|tertiary/.test(id),thin=/path|pedestrian|track|footway/.test(id);
+          var w=big?W(1.2,8,34):mid?W(.8,6,26):thin?W(.5,1.8,5):W(.6,4.5,20);
+          var casing=/casing|outline/.test(id);
+          p["line-color"]=casing?C.casing:C.road;
+          p["line-width"]=casing?W((big?1.2:.8)+1.6,(big?8:mid?6:thin?1.8:4.5)+3.2,(big?34:mid?26:thin?5:20)+6):w;
+          p["line-opacity"]=1;
+          if(thin&&!casing){p["line-color"]=C.casing}
+        }
+      }
+      else if(sl==="boundary"||/boundary/.test(id)){p["line-color"]="#a8805a"}
+    }
+    else if(l.type==="symbol"){
+      var road=/road|highway|street|path|ref|shield/.test(id)&&!/place|poi/.test(id);
+      if(sl==="place"||sl==="park"||sl==="poi"||sl==="aerodrome_label"||/place|poi|park|aerodrome/.test(id)&&!/road|highway|street|path|ref|shield/.test(id)){LABEL_LAYERS.push(id);p["text-opacity"]=0;p["icon-opacity"]=0;return}
+      p["text-color"]=road?C.rn:C.ink;p["text-halo-color"]=C.land;p["text-halo-width"]=1.8;
+      if(road){l.layout=l.layout||{};l.layout["text-transform"]="uppercase";l.layout["text-letter-spacing"]=0.04}
+    }
+    else if(l.type==="fill-extrusion"){p["fill-extrusion-color"]=C.bld}
+    }catch(e){}
+  });
+  return st;
+}
+var SIZES={city:19,town:17,village:15,suburb:14,quarter:14,neighbourhood:13,hamlet:12,isolated_dwelling:12};
+function drawPlaceLabels(){
+  var ids=LABEL_LAYERS.filter(function(i){return map.getLayer(i)});
+  if(!ids.length)return;
+  var feats;try{feats=map.queryRenderedFeatures({layers:ids})}catch(e){feats=[]}
+  var z=map.getZoom();
+  if(!feats.length&&z>=11&&z<=16){
+    labelMiss++;
+    if(labelMiss>=3&&!labelFallback){labelFallback=true;ids.forEach(function(i){try{map.setPaintProperty(i,"text-opacity",1);map.setPaintProperty(i,"icon-opacity",1)}catch(e){}})}
+  }else if(feats.length)labelMiss=0;
+  if(labelFallback)return;
+  var seen={},out=[];
+  feats.forEach(function(f){
+    var pr=f.properties||{},n=pr["name:latin"]||pr.name;
+    if(!n||seen[n]||!f.geometry||f.geometry.type!=="Point")return;
+    var sl=f.sourceLayer||"",cls=pr.class||"";
+    if(sl==="aerodrome_label")return;
+    if(sl==="poi"&&!/museum|college|university|attraction|zoo|stadium/.test(cls))return;
+    seen[n]=1;
+    out.push({n:n,ll:f.geometry.coordinates,size:sl==="place"?(SIZES[cls]||13):(sl==="park"?13:12)});
+  });
+  out.sort(function(a,b){return b.size-a.size});
+  out=out.slice(0,45);
+  var sig=out.map(function(o){return o.n}).join("|");
+  if(sig===labelSig)return;
+  labelSig=sig;
+  labelMarkers.forEach(function(m){m.remove()});labelMarkers=[];
+  out.forEach(function(o){
+    var el=h("div",{class:"plbl",text:o.n,style:"font-size:"+o.size+"px"});
+    labelMarkers.push(new maplibregl.Marker({element:el,anchor:"center"}).setLngLat(o.ll).addTo(map));
+  });
+}
+var map=new maplibregl.Map({container:"map",style:{version:8,sources:{},layers:[{id:"bg",type:"background",paint:{"background-color":"#ead3a6"}}]},center:START,zoom:12,attributionControl:{compact:true}});
+fetch(STYLE_URL).then(function(r){return r.json()}).then(function(st){map.setStyle(kraftStyle(st))}).catch(function(){map.setStyle(STYLE_URL)});
+map.on("idle",drawPlaceLabels);
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),"bottom-right");
+var geo=new maplibregl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:false});
+map.addControl(geo,"bottom-right");
+geo.on("geolocate",function(e){here={lat:e.coords.latitude,lng:e.coords.longitude}});
+map.on("click",function(e){if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
+
+/* ---------- sheet ---------- */
+function openSheet(title,nodes){
+  var s=$("sheet");
+  var kids=[h("div",{class:"grab"}),h("div",{class:"shead"},[h("h2",{text:title}),h("button",{class:"x",type:"button","aria-label":"Close",text:"×",onclick:closeSheet})])].concat(nodes);
+  s.replaceChildren.apply(s,kids);
+  s.hidden=false;s.scrollTop=0;
+}
+function closeSheet(){
+  $("sheet").hidden=true;
+  if(tempMarker){tempMarker.remove();tempMarker=null}
+  adding=false;$("banner").hidden=true;
+}
+
+/* ---------- account ---------- */
+function updateAcct(){$("acct").textContent=user?"Sign out":"Sign in"}
+$("acct").addEventListener("click",function(){
+  if(user){sb.auth.signOut().then(function(){toast("Signed out")})}else openAuth();
+});
+function openAuth(){
+  var email=h("input",{type:"email",autocomplete:"email",inputmode:"email",placeholder:"you@example.com"});
+  var pw=h("input",{type:"password",autocomplete:"current-password",placeholder:"At least 8 characters"});
+  var msg=h("p",{class:"mut"});
+  function go(mode){
+    var e=email.value.trim(),p=pw.value;
+    if(!e||p.length<8){msg.textContent="Enter your email and a password of at least 8 characters.";return}
+    msg.textContent="One moment…";
+    var call=mode==="up"
+      ?sb.auth.signUp({email:e,password:p,options:{emailRedirectTo:location.origin+location.pathname}})
+      :sb.auth.signInWithPassword({email:e,password:p});
+    call.then(function(r){
+      if(r.error){msg.textContent=errText(r.error);return}
+      if(mode==="up"&&!r.data.session){msg.textContent="Nearly there. Check your email and tap the link to confirm, then come back and sign in."}
+      else{closeSheet();toast("Welcome!")}
+    }).catch(function(x){msg.textContent=errText(x)});
+  }
+  openSheet("Sign in",[
+    h("label",{text:"Email"}),email,
+    h("label",{text:"Password"}),pw,
+    h("div",{class:"row",style:"margin-top:14px"},[
+      h("button",{class:"btn dark",type:"button",text:"Sign in",onclick:function(){go("in")}}),
+      h("button",{class:"btn",type:"button",text:"Create account",onclick:function(){go("up")}})
+    ]),
+    msg,
+    h("p",{class:"mut",text:"We keep your email and what you add so you can sign in and so places can be approved. A full privacy notice will be added before launch."})
+  ]);
+}
+
+/* ---------- data ---------- */
+function loadProfile(){
+  if(!user){isAdmin=false;return Promise.resolve()}
+  return sb.from("profiles").select("is_admin").eq("id",user.id).maybeSingle().then(function(r){isAdmin=!!(r.data&&r.data.is_admin)});
+}
+function loadPlaces(){
+  return sb.from("places").select("*").order("created_at",{ascending:true}).then(function(r){
+    if(r.error){toast("Couldn't load places: "+errText(r.error));return}
+    places=r.data||[];
+    return sb.from("place_photos").select("place_id,path").then(function(p){
+      photos={};
+      (p.data||[]).forEach(function(x){(photos[x.place_id]=photos[x.place_id]||[]).push(x.path)});
+    });
+  }).then(function(){draw()});
+}
+function refreshAll(){return loadProfile().then(loadPlaces).then(function(){updateAcct();draw()})}
+function photoUrl(path){return sb.storage.from("photos").getPublicUrl(path).data.publicUrl}
+
+/* ---------- chips ---------- */
+function drawChips(){
+  var box=$("chips"),list=[];
+  list.push({t:"All",on:!fCat&&!fInd&&!fPend,f:function(){fCat="";fInd=false;fPend=false}});
+  if(isAdmin){var n=places.filter(function(p){return p.status==="pending"}).length;list.push({t:"⏳ Waiting ("+n+")",on:fPend,f:function(){fPend=!fPend}})}
+  list.push({t:"★ Independent only",on:fInd,f:function(){fInd=!fInd}});
+  CATS.forEach(function(c){list.push({t:c.icon+" "+c.label,on:fCat===c.id,f:function(){fCat=(fCat===c.id)?"":c.id}})});
+  box.replaceChildren.apply(box,list.map(function(x){
+    return h("div",{class:"cw"},[h("button",{class:"chip",type:"button","aria-pressed":x.on?"true":"false",text:x.t,onclick:function(){x.f();drawChips();draw()}})]);
+  }));
+}
+function visible(){
+  return places.filter(function(p){return (!fCat||p.category===fCat)&&(!fInd||p.independent)&&(!fPend||p.status==="pending")});
+}
+
+/* ---------- pins ---------- */
+function draw(){
+  drawChips();
+  markers.forEach(function(m){m.remove()});markers=[];
+  visible().forEach(function(p){
+    var c=catOf(p.category);
+    var ph0=(photos[p.id]||[])[0];
+    var ring=h("div",{class:"ring"},[ph0?h("img",{src:photoUrl(ph0),alt:"",loading:"lazy",onerror:function(){this.remove();ring.textContent=c.icon}}):c.icon]);
+    var el=h("div",{class:"pin"+(p.status!=="approved"?" pending":""),role:"button","aria-label":p.name,style:"--cc:var(--c-"+c.id+")"},[h("div",{class:"tail"}),ring,p.independent?h("div",{class:"pstar",text:"★"}):null]);
+    el.addEventListener("click",function(ev){ev.stopPropagation();if(!adding)openPlace(p)});
+    markers.push(new maplibregl.Marker({element:el,anchor:"bottom"}).setLngLat([p.lng,p.lat]).addTo(map));
+  });
+}
+function showTemp(){
+  if(tempMarker)tempMarker.remove();
+  var el=h("div",{class:"pin temp"},[h("div",{class:"tail"}),h("div",{class:"ring",text:"📍"})]);
+  tempMarker=new maplibregl.Marker({element:el,anchor:"bottom"}).setLngLat(tempLL).addTo(map);
+}
+
+/* ---------- find the good stuff ---------- */
+$("findBtn").addEventListener("click",function(){
+  function show(){
+    var list=visible().filter(function(p){return p.status==="approved"});
+    if(here)list.sort(function(a,b){return distKm(here.lat,here.lng,a.lat,a.lng)-distKm(here.lat,here.lng,b.lat,b.lng)});
+    else list.sort(function(a,b){return a.name.localeCompare(b.name)});
+    var nodes=[h("p",{class:"mut",text:here?"Closest first.":"Tap the arrow button on the map to sort by distance."})];
+    if(!list.length)nodes.push(h("p",{text:"Nothing here yet. Be the first to add something!"}));
+    var box=h("div",{class:"list"},list.map(function(p){
+      var c=catOf(p.category);
+      var d=here?(" · "+distKm(here.lat,here.lng,p.lat,p.lng).toFixed(1)+" km"):"";
+      return h("button",{class:"item",type:"button",onclick:function(){map.flyTo({center:[p.lng,p.lat],zoom:16});openPlace(p)}},[
+        h("b",{text:c.icon+" "+p.name}),h("span",{class:"mut",text:c.label+(p.village?" · "+p.village:"")+d})]);
+    }));
+    nodes.push(box);
+    openSheet("Find the good stuff",nodes);
+  }
+  if(!here&&navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(pos){here={lat:pos.coords.latitude,lng:pos.coords.longitude};show()},function(){show()},{timeout:4000});
+  }else show();
+});
+
+/* ---------- place sheet ---------- */
+function stars(n){var s="";for(var i=1;i<=5;i++)s+=i<=n?"★":"☆";return s}
+function openLightbox(urls,start,alt){
+  var i=start,box=h("div",{class:"lb"}),img=h("img",{alt:alt||""}),ct=h("div",{class:"ct"});
+  function show(){img.src=urls[i];ct.textContent=urls.length>1?(i+1)+" of "+urls.length:""}
+  function close(){box.remove();document.removeEventListener("keydown",key)}
+  function go(d){i=(i+d+urls.length)%urls.length;show()}
+  function key(e){if(e.key==="Escape")close();else if(e.key==="ArrowLeft")go(-1);else if(e.key==="ArrowRight")go(1)}
+  var x0=null;
+  box.addEventListener("touchstart",function(e){x0=e.touches[0].clientX},{passive:true});
+  box.addEventListener("touchend",function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(urls.length>1&&Math.abs(dx)>50)go(dx<0?1:-1)},{passive:true});
+  box.addEventListener("click",function(e){if(e.target===box||e.target===img)close()});
+  box.appendChild(img);
+  box.appendChild(h("button",{class:"x",type:"button","aria-label":"Close",text:"×",onclick:close}));
+  if(urls.length>1){
+    box.appendChild(h("button",{class:"pv",type:"button","aria-label":"Previous",text:"‹",onclick:function(){go(-1)}}));
+    box.appendChild(h("button",{class:"nx",type:"button","aria-label":"Next",text:"›",onclick:function(){go(1)}}));
+  }
+  box.appendChild(ct);
+  document.addEventListener("keydown",key);
+  document.body.appendChild(box);show();
+}
+function openPlace(p){
+  var c=catOf(p.category),nodes=[];
+  var ph=photos[p.id]||[];
+  if(ph.length)nodes.push(h("div",{class:"gal"},ph.map(function(path,i){return h("img",{src:photoUrl(path),alt:p.name,loading:"lazy",onclick:function(){openLightbox(ph.map(photoUrl),i,p.name)}})})));
+  var tags=[h("span",{class:"tag",text:c.icon+" "+c.label})];
+  if(p.independent)tags.push(h("span",{class:"tag",text:"★ Independent"}));
+  if(p.village)tags.push(h("span",{class:"tag",text:"📍 "+p.village}));
+  if(p.status!=="approved")tags.push(h("span",{class:"tag",text:p.status==="pending"?"⏳ Waiting for approval":"Not approved"}));
+  nodes.push(h("div",{},tags));
+  if(p.note)nodes.push(h("p",{text:p.note}));
+  var links=[];
+  var w=safeWeb(p.website);if(w)links.push(h("a",{href:w,target:"_blank",rel:"noopener noreferrer",text:"Website"}));
+  var ig=cleanIg(p.instagram);if(ig)links.push(h("a",{href:"https://www.instagram.com/"+ig,target:"_blank",rel:"noopener noreferrer",text:"Instagram"}));
+  var vu=safeWeb(p.video_url);if(vu)links.push(h("a",{href:vu,target:"_blank",rel:"noopener noreferrer",text:"▶ Watch video"}));
+  if(links.length){
+    var wrap=h("p",{});
+    links.forEach(function(a,i){if(i)wrap.appendChild(document.createTextNode("  ·  "));wrap.appendChild(a)});
+    nodes.push(wrap);
+  }
+  if(isAdmin){
+    var ar=[];
+    if(p.status!=="approved")ar.push(h("button",{class:"btn pri",type:"button",text:"Approve",onclick:function(){setStatus(p,"approved")}}));
+    if(p.status==="pending")ar.push(h("button",{class:"btn",type:"button",text:"Reject",onclick:function(){setStatus(p,"rejected")}}));
+    ar.push(h("button",{class:"btn",type:"button",text:"Delete",onclick:function(){delPlace(p,this)}}));
+    nodes.push(h("div",{class:"row",style:"flex-wrap:wrap;margin:10px 0"},ar));
+  }
+  var revBox=h("div",{},[h("p",{class:"mut",text:"Loading reviews…"})]);
+  nodes.push(h("h3",{text:"Reviews",style:"margin:18px 0 4px"}),revBox);
+  openSheet(p.name,nodes);
+  if(p.status==="approved")loadReviews(p,revBox);else revBox.replaceChildren(h("p",{class:"mut",text:"Reviews open once this place is approved."}));
+}
+function loadReviews(p,box){
+  sb.from("reviews").select("rating,body,user_id,created_at").eq("place_id",p.id).order("created_at",{ascending:false}).then(function(r){
+    var rows=r.data||[],kids=[];
+    if(rows.length){
+      var avg=rows.reduce(function(a,x){return a+x.rating},0)/rows.length;
+      kids.push(h("p",{},[h("b",{text:stars(Math.round(avg))+" "+avg.toFixed(1)}),h("span",{class:"mut",text:" ("+rows.length+(rows.length===1?" review)":" reviews)")})]));
+      rows.forEach(function(x){kids.push(h("div",{class:"card"},[h("b",{text:stars(x.rating)}),h("span",{text:x.body||""})]))});
+    }else kids.push(h("p",{class:"mut",text:"No reviews yet."}));
+    kids.push(reviewForm(p,box));
+    box.replaceChildren.apply(box,kids);
+  });
+}
+function reviewForm(p,box){
+  if(!user)return h("button",{class:"btn",type:"button",text:"Sign in to leave a review",onclick:openAuth});
+  var sel={value:"5"};
+  var starBtns=[1,2,3,4,5].map(function(n){
+    return h("button",{type:"button","aria-label":n+" star"+(n>1?"s":""),style:"background:none;border:0;padding:4px 6px;font-size:34px;line-height:1;cursor:pointer;color:inherit",text:"★",onclick:function(){sel.value=String(n);paint()}});
+  });
+  function paint(){starBtns.forEach(function(s,i){s.textContent=i<parseInt(sel.value,10)?"★":"☆"})}
+  paint();
+  var starRow=h("div",{style:"margin:4px 0 8px"},starBtns);
+  var txt=h("textarea",{maxlength:"500",placeholder:"What was it like? Any tips?"});
+  var b=h("button",{class:"btn dark",type:"button",text:"Post review"});
+  b.addEventListener("click",function(){
+    b.disabled=true;
+    sb.from("reviews").upsert({place_id:p.id,user_id:user.id,rating:parseInt(sel.value,10),body:txt.value.trim()},{onConflict:"place_id,user_id"}).then(function(r){
+      b.disabled=false;
+      if(r.error){toast(errText(r.error));return}
+      toast("Thanks for your review!");loadReviews(p,box);
+    });
+  });
+  return h("div",{style:"margin-top:12px"},[h("label",{text:"Your review (one per place)"}),starRow,txt,h("div",{style:"margin-top:8px"},[b])]);
+}
+function setStatus(p,status){
+  var patch={status:status};if(status==="approved")patch.approved_at=new Date().toISOString();
+  sb.from("places").update(patch).eq("id",p.id).then(function(r){
+    if(r.error){toast(errText(r.error));return}
+    toast(status==="approved"?"Approved":"Rejected");closeSheet();loadPlaces();
+  });
+}
+function delPlace(p,btn){
+  if(btn.dataset.sure!=="1"){btn.dataset.sure="1";btn.textContent="Tap again to delete";return}
+  var paths=photos[p.id]||[];
+  sb.from("places").delete().eq("id",p.id).then(function(r){
+    if(r.error){toast(errText(r.error));return}
+    if(paths.length)sb.storage.from("photos").remove(paths);
+    toast("Deleted");closeSheet();loadPlaces();
+  });
+}
+
+/* ---------- add flow ---------- */
+$("addBtn").addEventListener("click",function(){
+  if(!user){openAuth();return}
+  closeSheet();adding=true;$("banner").hidden=false;
+  toast("Tap the map where the place is");
+});
+var picked=[];
+function resize(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){
+      var m=1600,s=Math.min(1,m/Math.max(img.width,img.height));
+      var cv=document.createElement("canvas");cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      cv.toBlob(function(b){URL.revokeObjectURL(url);b?res(b):rej(new Error("Couldn't read that photo"))},"image/jpeg",.82);
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error("Couldn't read that photo"))};
+    img.src=url;
+  });
+}
+function openAddForm(){
+  $("banner").hidden=true;picked=[];
+  var name=h("input",{type:"text",maxlength:"120",placeholder:"What is it called?",autocomplete:"off"});
+  var cat=h("select",{},CATS.map(function(c){return h("option",{value:c.id,text:c.icon+" "+c.label})}));
+  var note=h("textarea",{maxlength:"1000",placeholder:"What's there? Why go?"});
+  var ind=h("input",{type:"checkbox",id:"ind"});
+  var web=h("input",{type:"text",maxlength:"200",placeholder:"www.example.co.uk",inputmode:"url",autocomplete:"off"});
+  var ig=h("input",{type:"text",maxlength:"60",placeholder:"handle, like cambridgecyclesmith",autocomplete:"off"});
+  var vid=h("input",{type:"text",maxlength:"300",placeholder:"Paste a YouTube, Instagram or album link",inputmode:"url",autocomplete:"off"});
+  var thumbs=h("div",{class:"thumbs"});
+  var file=h("input",{type:"file",accept:"image/*",multiple:true,hidden:true});
+  file.addEventListener("change",function(){
+    var fs=Array.prototype.slice.call(file.files||[]);
+    fs.forEach(function(f){if(picked.length<8)picked.push(f)});
+    file.value="";
+    thumbs.replaceChildren.apply(thumbs,picked.map(function(f){return h("img",{src:URL.createObjectURL(f),alt:""})}));
+  });
+  var msg=h("p",{class:"mut"});
+  var go=h("button",{class:"btn pri",type:"button",text:isAdmin?"Add place":"Send for approval"});
+  go.addEventListener("click",function(){
+    var nm=name.value.trim();
+    if(!nm){msg.textContent="Please give it a name.";return}
+    if(ig.value.trim()&&!cleanIg(ig.value)){msg.textContent="I couldn't read that Instagram name. Try just the handle, like cambridgecyclesmith.";return}
+    go.disabled=true;msg.textContent="Saving…";
+    var row={name:nm,category:cat.value,note:note.value.trim()||null,independent:ind.checked,
+      website:safeWeb(web.value)||null,instagram:cleanIg(ig.value)||null,video_url:safeWeb(vid.value)||null,
+      lat:tempLL.lat,lng:tempLL.lng,status:isAdmin?"approved":"pending"};
+    if(isAdmin)row.approved_at=new Date().toISOString();
+    sb.from("places").insert(row).select().single().then(function(r){
+      if(r.error)throw r.error;
+      var place=r.data;
+      return picked.reduce(function(chain,f,i){
+        return chain.then(function(){return resize(f)}).then(function(blob){
+          var path=user.id+"/"+place.id+"-"+i+".jpg";
+          return sb.storage.from("photos").upload(path,blob,{contentType:"image/jpeg"}).then(function(u){
+            if(u.error)throw u.error;
+            return sb.from("place_photos").insert({place_id:place.id,path:path});
+          }).then(function(q){if(q.error)throw q.error});
+        });
+      },Promise.resolve());
+    }).then(function(){
+      closeSheet();
+      toast(isAdmin?"Added!":"Thanks! It will appear once approved.");
+      loadPlaces();
+    }).catch(function(e){go.disabled=false;msg.textContent="Couldn't save: "+errText(e)});
+  });
+  openSheet("Add to village",[
+    h("p",{class:"mut",text:"Share what you found."}),
+    h("label",{text:"Name"}),name,
+    h("label",{text:"Type"}),cat,
+    h("label",{text:"Notes"}),note,
+    h("div",{class:"row",style:"margin-top:12px"},[ind,h("label",{for:"ind",style:"margin:0",text:"Independent (not a chain)"})]),
+    h("label",{text:"Website (optional)"}),web,
+    h("label",{text:"Instagram (optional)"}),ig,
+    h("label",{text:"Video link (optional)"}),vid,
+    h("label",{text:"Photos"}),
+    h("button",{class:"btn",type:"button",text:"📷 Add photos",onclick:function(){file.click()}}),file,thumbs,
+    h("div",{style:"margin-top:16px"},[go]),msg
+  ]);
+}
+
+/* ---------- boot ---------- */
+document.title=APP_NAME;$("appname").textContent=APP_NAME;
+drawChips();
+sb.auth.onAuthStateChange(function(ev,session){
+  user=session?session.user:null;
+  setTimeout(refreshAll,0); /* avoid calling the database inside the auth callback */
+});
+sb.auth.getSession().then(function(r){user=r.data.session?r.data.session.user:null;return refreshAll()});
+map.on("load",function(){draw()});
+})();
+</script>
+</body>
+</html>
