@@ -115,6 +115,9 @@ input[type=text],input[type=email],input[type=password],textarea,select{border-r
 #banner{background:var(--ink);color:#fff;border:3px solid #fff;border-radius:2px;box-shadow:4px 4px 0 var(--orange)}
 .maplibregl-marker.pin,.maplibregl-marker.plbl{position:absolute!important;top:0;left:0}
 .pin .pw{position:absolute;left:0;top:0;width:46px;height:54px;transform-origin:50% 100%;transform:scale(var(--ps,1))}
+.catgrid{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}
+.catgrid button{border:3px solid var(--ink);background:var(--cream);color:var(--ink);padding:9px 11px;font-weight:700;font-size:14px;letter-spacing:.01em;box-shadow:2px 2px 0 var(--ink);cursor:pointer;line-height:1.2;text-align:left}
+.catgrid button[aria-pressed="true"]{background:var(--ink);color:var(--cream)}
 .plbl{white-space:nowrap;pointer-events:none;z-index:1;font-family:Shrikhand,"Cooper Black",Georgia,serif;font-weight:400;color:var(--ink);letter-spacing:.02em;line-height:1;text-shadow:0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 4px #ead3a6}
 .pin{z-index:3}
 </style>
@@ -237,9 +240,9 @@ var TITLE=TITLES[QS.t-1]||TITLES[0],NAMEFONT=NAMEF[QS.m-1]||NAMEF[0],PAL=PALS[QS
   var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
   document.addEventListener("DOMContentLoaded",function(){
     var b=document.createElement("button");b.type="button";b.textContent="🎨 Looks";
-    b.style.cssText="position:fixed;left:14px;bottom:calc(250px + env(safe-area-inset-bottom,0px));z-index:40;border:3px solid var(--ink);background:var(--cream);color:var(--ink);font:700 13px 'DM Sans',sans-serif;padding:8px 12px;box-shadow:3px 3px 0 var(--ink);cursor:pointer";
+    b.style.cssText="position:fixed;left:14px;bottom:calc(250px + env(safe-area-inset-bottom,0px));z-index:14;border:3px solid var(--ink);background:var(--cream);color:var(--ink);font:700 13px 'DM Sans',sans-serif;padding:8px 12px;box-shadow:3px 3px 0 var(--ink);cursor:pointer";
     var box=document.createElement("div");
-    box.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(300px + env(safe-area-inset-bottom,0px));z-index:41;background:var(--cream);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px;display:none;font:14px 'DM Sans',sans-serif";
+    box.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(300px + env(safe-area-inset-bottom,0px));z-index:14;background:var(--cream);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px;display:none;font:14px 'DM Sans',sans-serif";
     function row(lbl,list,cur){var d=document.createElement("label");d.style.cssText="display:block;margin:0 0 8px;font-weight:700";d.textContent=lbl;var sel=document.createElement("select");sel.style.cssText="width:100%;margin-top:3px;padding:8px;font:inherit;border:2px solid var(--ink)";list.forEach(function(x,i){var o=document.createElement("option");o.value=i+1;o.textContent=(i+1)+" · "+(x.n||x[0]);if(i+1===cur)o.selected=true;sel.appendChild(o)});d.appendChild(sel);box.appendChild(d);return sel}
     var st1=row("Title font",TITLES,QS.t),sm=row("Place-name font",NAMEF,QS.m),sp=row("Colours",PALS,QS.p),sf=row("Buttons & text font",TEXTF,QS.f);
     var go=document.createElement("button");go.type="button";go.textContent="Show me";go.style.cssText="border:3px solid var(--ink);background:var(--accent);color:#fff;font:700 14px 'DM Sans',sans-serif;padding:9px 14px;cursor:pointer;width:100%";
@@ -366,7 +369,7 @@ map.on("zoom",pinScale);pinScale();
 
 function closeCredit(){var a=document.querySelector(".maplibregl-ctrl-attrib");if(a){a.classList.remove("maplibregl-compact-show");a.removeAttribute("open")}}
 map.on("load",closeCredit);setTimeout(closeCredit,600);setTimeout(closeCredit,2000);
-map.on("click",function(e){if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
+map.on("click",function(e){if(moving){doMove(e.lngLat);return}if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
 
 /* ---------- sheet ---------- */
 function openSheet(title,nodes){
@@ -521,6 +524,7 @@ function openPlace(p){
   if(p.status!=="approved")tags.push(h("span",{class:"tag",text:p.status==="pending"?"⏳ Waiting for approval":"Not approved"}));
   nodes.push(h("div",{},tags));
   if(p.note)nodes.push(h("p",{text:p.note}));
+  if(p.details)nodes.push(h("p",{class:"mut",text:"ℹ️ "+p.details}));
   var links=[];
   var w=safeWeb(p.website);if(w)links.push(h("a",{href:w,target:"_blank",rel:"noopener noreferrer",text:"Website"}));
   var ig=cleanIg(p.instagram);if(ig)links.push(h("a",{href:"https://www.instagram.com/"+ig,target:"_blank",rel:"noopener noreferrer",text:"Instagram"}));
@@ -534,6 +538,8 @@ function openPlace(p){
     var ar=[];
     if(p.status!=="approved")ar.push(h("button",{class:"btn pri",type:"button",text:"Approve",onclick:function(){setStatus(p,"approved")}}));
     if(p.status==="pending")ar.push(h("button",{class:"btn",type:"button",text:"Reject",onclick:function(){setStatus(p,"rejected")}}));
+    ar.push(h("button",{class:"btn",type:"button",text:"✏️ Edit",onclick:function(){openEditForm(p)}}));
+    ar.push(h("button",{class:"btn",type:"button",text:"📍 Move pin",onclick:function(){startMove(p)}}));
     ar.push(h("button",{class:"btn",type:"button",text:"Delete",onclick:function(){delPlace(p,this)}}));
     nodes.push(h("div",{class:"row",style:"flex-wrap:wrap;margin:10px 0"},ar));
   }
@@ -590,6 +596,56 @@ function delPlace(p,btn){
     if(paths.length)sb.storage.from("photos").remove(paths);
     toast("Deleted");closeSheet();loadPlaces();
   });
+}
+
+/* ---------- owner: edit + move ---------- */
+var moving=null;
+function startMove(p){
+  closeSheet();moving=p;$("banner").textContent="Tap the map where "+p.name+" should be";$("banner").hidden=false;
+  map.flyTo({center:[p.lng,p.lat],zoom:Math.max(map.getZoom(),18)});
+  toast("Tap the exact spot");
+}
+function doMove(ll){
+  var p=moving;moving=null;$("banner").hidden=true;$("banner").textContent="Tap the map where the place is";
+  sb.from("places").update({lat:ll.lat,lng:ll.lng}).eq("id",p.id).then(function(r){
+    if(r.error){toast(errText(r.error));return}
+    toast("Moved!");loadPlaces();
+  });
+}
+function openEditForm(p){
+  var name=h("input",{type:"text",maxlength:"120",autocomplete:"off"});name.value=p.name||"";
+  var cat=h("div",{class:"catgrid"});cat.value=p.category||CATS[0].id;
+  function paintCat(){Array.prototype.forEach.call(cat.children,function(b){b.setAttribute("aria-pressed",b.getAttribute("data-id")===cat.value?"true":"false")})}
+  CATS.forEach(function(c){cat.appendChild(h("button",{type:"button","data-id":c.id,text:c.icon+" "+c.label,onclick:function(){cat.value=c.id;paintCat()}}))});
+  paintCat();
+  var note=h("textarea",{maxlength:"1000"});note.value=p.note||"";
+  var det=h("input",{type:"text",maxlength:"200",placeholder:"Opening days, halal, tips…",autocomplete:"off"});det.value=p.details||"";
+  var ind=h("input",{type:"checkbox",id:"eind"});ind.checked=!!p.independent;
+  var web=h("input",{type:"text",maxlength:"200",inputmode:"url",autocomplete:"off"});web.value=p.website||"";
+  var ig=h("input",{type:"text",maxlength:"60",autocomplete:"off"});ig.value=p.instagram||"";
+  var msg=h("p",{class:"mut"});
+  var save=h("button",{class:"btn pri",type:"button",text:"Save changes"});
+  save.addEventListener("click",function(){
+    var nm=name.value.trim();
+    if(!nm){msg.textContent="Please give it a name.";return}
+    if(ig.value.trim()&&!cleanIg(ig.value)){msg.textContent="I couldn't read that Instagram name. Try just the handle.";return}
+    save.disabled=true;msg.textContent="Saving…";
+    sb.from("places").update({name:nm,category:cat.value,note:note.value.trim()||null,details:det.value.trim()||null,independent:ind.checked,
+      website:safeWeb(web.value)||null,instagram:cleanIg(ig.value)||null}).eq("id",p.id).then(function(r){
+      if(r.error){save.disabled=false;msg.textContent="Couldn't save: "+errText(r.error);return}
+      closeSheet();toast("Saved");loadPlaces();
+    });
+  });
+  openSheet("Edit place",[
+    h("label",{text:"Name"}),name,
+    h("label",{text:"Type"}),cat,
+    h("label",{text:"Notes"}),note,
+    h("label",{text:"Good to know"}),det,
+    h("div",{class:"row",style:"margin-top:12px"},[ind,h("label",{for:"eind",style:"margin:0",text:"Independent (not a chain)"})]),
+    h("label",{text:"Website"}),web,
+    h("label",{text:"Instagram"}),ig,
+    h("div",{style:"margin-top:14px"},[save]),msg
+  ]);
 }
 
 /* ---------- add flow ---------- */
@@ -664,7 +720,10 @@ function resize(file){
 function openAddForm(){
   $("banner").hidden=true;picked=prePick?[prePick]:[];prePick=null;
   var name=h("input",{type:"text",maxlength:"120",placeholder:"What is it called?",autocomplete:"off"});
-  var cat=h("select",{},CATS.map(function(c){return h("option",{value:c.id,text:c.icon+" "+c.label})}));
+  var cat=h("div",{class:"catgrid"});cat.value=CATS[0].id;
+  function paintCat(){Array.prototype.forEach.call(cat.children,function(b){b.setAttribute("aria-pressed",b.getAttribute("data-id")===cat.value?"true":"false")})}
+  CATS.forEach(function(c){cat.appendChild(h("button",{type:"button","data-id":c.id,text:c.icon+" "+c.label,onclick:function(){cat.value=c.id;paintCat()}}))});
+  paintCat();
   var note=h("textarea",{maxlength:"1000",placeholder:"What's there? Why go?"});
   var ind=h("input",{type:"checkbox",id:"ind"});
   var web=h("input",{type:"text",maxlength:"200",placeholder:"www.example.co.uk",inputmode:"url",autocomplete:"off"});
