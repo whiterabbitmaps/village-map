@@ -363,7 +363,7 @@ map.addControl(new maplibregl.NavigationControl({showCompass:false}),"bottom-rig
 var geo=new maplibregl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:false});
 map.addControl(geo,"bottom-right");
 geo.on("geolocate",function(e){here={lat:e.coords.latitude,lng:e.coords.longitude}});
-function pinScale(){var z=map.getZoom(),s=Math.max(.35,Math.min(1,.35+(z-4)*.059));document.documentElement.style.setProperty("--ps",s.toFixed(3))}
+function pinScale(){var z=map.getZoom(),s=Math.max(.35,Math.min(1,.35+(z-4)*.059));if(z>16)s=1+Math.min(.4,(z-16)*.16);document.documentElement.style.setProperty("--ps",s.toFixed(3))}
 map.on("zoom",pinScale);pinScale();
 
 
