@@ -547,6 +547,7 @@ function openPlace(p){
   nodes.push(h("div",{},tags));
   if(p.note)nodes.push(h("p",{text:p.note}));
   if(p.details)nodes.push(h("p",{class:"mut",text:"ℹ️ "+p.details}));
+  nodes.push(h("p",{},[h("a",{class:"btn pri",href:"https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(p.lat+","+p.lng),target:"_blank",rel:"noopener noreferrer",style:"display:inline-block;text-decoration:none",text:"🧭 Directions"})]));
   var links=[];
   var w=safeWeb(p.website);if(w)links.push(h("a",{href:w,target:"_blank",rel:"noopener noreferrer",text:"Website"}));
   var ig=cleanIg(p.instagram);if(ig)links.push(h("a",{href:"https://www.instagram.com/"+ig,target:"_blank",rel:"noopener noreferrer",text:"Instagram"}));
