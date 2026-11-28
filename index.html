@@ -593,10 +593,59 @@ function delPlace(p,btn){
 }
 
 /* ---------- add flow ---------- */
+var prePick=null;
+function gpsFrom(v,t){
+  var le=v.getUint16(t)===0x4949;
+  function u16(q){return v.getUint16(q,le)}function u32(q){return v.getUint32(q,le)}
+  var ifd=t+u32(t+4),n=u16(ifd),gp=0,i,e;
+  for(i=0;i<n;i++){e=ifd+2+i*12;if(u16(e)===0x8825)gp=t+u32(e+8)}
+  if(!gp)return null;
+  var cnt=u16(gp),la=null,lo=null,lar="N",lor="E";
+  function rat(q){var a=t+u32(q+8);return u32(a)/u32(a+4)+(u32(a+8)/u32(a+12))/60+(u32(a+16)/u32(a+20))/3600}
+  for(i=0;i<cnt;i++){e=gp+2+i*12;var tag=u16(e);
+    if(tag===1)lar=String.fromCharCode(v.getUint8(e+8));else if(tag===3)lor=String.fromCharCode(v.getUint8(e+8));
+    else if(tag===2)la=rat(e);else if(tag===4)lo=rat(e)}
+  if(la==null||lo==null||!isFinite(la)||!isFinite(lo)||(la===0&&lo===0))return null;
+  return[lar==="S"?-la:la,lor==="W"?-lo:lo];
+}
+function exifGps(buf){
+  try{var v=new DataView(buf);if(v.getUint16(0)!==0xFFD8)return null;var o=2;
+    while(o<v.byteLength-4){var m=v.getUint16(o),len=v.getUint16(o+2);
+      if(m===0xFFE1&&v.getUint32(o+4)===0x45786966)return gpsFrom(v,o+10);
+      if((m&0xFF00)!==0xFF00)break;o+=2+len}}catch(e){}
+  return null;
+}
+function startTap(){closeSheet();adding=true;$("banner").hidden=false;toast("Tap the map where the place is")}
+function dropHere(ll){closeSheet();tempLL={lat:ll[0],lng:ll[1]};map.flyTo({center:[ll[1],ll[0]],zoom:17.5});showTemp();openAddForm()}
+function addFromPhoto(f){
+  if(!f)return;
+  f.arrayBuffer().then(function(buf){
+    var ll=exifGps(buf);prePick=f;
+    if(ll){dropHere(ll)}
+    else{closeSheet();adding=true;$("banner").hidden=false;toast("No location in that photo. Tap the map where it was taken.")}
+  }).catch(function(){toast("Couldn't read that photo.")});
+}
+function addHere(msgEl){
+  if(!navigator.geolocation){msgEl.textContent="Your phone isn't sharing its location with this page.";return}
+  msgEl.textContent="Finding you…";
+  navigator.geolocation.getCurrentPosition(function(pos){dropHere([pos.coords.latitude,pos.coords.longitude])},
+    function(){msgEl.textContent="Couldn't get your location. Allow location for Safari, or tap the map instead."},
+    {enableHighAccuracy:true,timeout:12000,maximumAge:15000});
+}
 $("addBtn").addEventListener("click",function(){
   if(!user){openAuth();return}
-  closeSheet();adding=true;$("banner").hidden=false;
-  toast("Tap the map where the place is");
+  var msg=h("p",{class:"mut"});
+  var pf=h("input",{type:"file",accept:"image/*",hidden:true});
+  pf.addEventListener("change",function(){addFromPhoto(pf.files&&pf.files[0]);pf.value=""});
+  function big(t,fn){return h("button",{class:"btn pri",type:"button",text:t,style:"display:block;width:100%;margin:0 0 10px;text-align:left",onclick:fn})}
+  openSheet("Add to village",[
+    h("p",{class:"mut",text:"How would you like to place it?"}),
+    big("📷  From a photo I took",function(){pf.click()}),
+    big("📍  Here, where I'm standing",function(){addHere(msg)}),
+    big("👆  Tap the map",startTap),
+    pf,msg,
+    h("p",{class:"mut",style:"font-size:12px",text:"For \"From a photo\": on iPhone, tap Options at the bottom of the photo picker and switch Location on, so the photo keeps where it was taken."})
+  ]);
 });
 var picked=[];
 function resize(file){
@@ -613,7 +662,7 @@ function resize(file){
   });
 }
 function openAddForm(){
-  $("banner").hidden=true;picked=[];
+  $("banner").hidden=true;picked=prePick?[prePick]:[];prePick=null;
   var name=h("input",{type:"text",maxlength:"120",placeholder:"What is it called?",autocomplete:"off"});
   var cat=h("select",{},CATS.map(function(c){return h("option",{value:c.id,text:c.icon+" "+c.label})}));
   var note=h("textarea",{maxlength:"1000",placeholder:"What's there? Why go?"});
@@ -629,6 +678,7 @@ function openAddForm(){
     file.value="";
     thumbs.replaceChildren.apply(thumbs,picked.map(function(f){return h("img",{src:URL.createObjectURL(f),alt:""})}));
   });
+  if(picked.length)thumbs.replaceChildren.apply(thumbs,picked.map(function(f){return h("img",{src:URL.createObjectURL(f),alt:""})}));
   var msg=h("p",{class:"mut"});
   var go=h("button",{class:"btn pri",type:"button",text:isAdmin?"Add place":"Send for approval"});
   go.addEventListener("click",function(){
