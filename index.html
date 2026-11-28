@@ -115,6 +115,9 @@ input[type=text],input[type=email],input[type=password],textarea,select{border-r
 #banner{background:var(--ink);color:#fff;border:3px solid #fff;border-radius:2px;box-shadow:4px 4px 0 var(--orange)}
 .maplibregl-marker.pin,.maplibregl-marker.plbl{position:absolute!important;top:0;left:0}
 .pin .pw{position:absolute;left:0;top:0;width:46px;height:54px;transform-origin:50% 100%;transform:scale(var(--ps,1))}
+.maplibregl-user-location-dot,.maplibregl-user-location-dot::before{background-color:#f6c026!important}
+.maplibregl-user-location-dot{box-shadow:0 0 4px rgba(0,0,0,.4)}
+.maplibregl-user-location-accuracy-circle{background-color:rgba(246,192,38,.2)!important}
 .catgrid{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 6px}
 .catgrid button{border:3px solid var(--ink);background:var(--cream);color:var(--ink);padding:9px 11px;font-weight:700;font-size:14px;letter-spacing:.01em;box-shadow:2px 2px 0 var(--ink);cursor:pointer;line-height:1.2;text-align:left}
 .catgrid button[aria-pressed="true"]{background:var(--ink);color:var(--cream)}
@@ -225,33 +228,52 @@ var PALS=[
 ];
 var QS={};try{var _u=new URLSearchParams(location.search);["t","m","p","f"].forEach(function(k){QS[k]=parseInt(_u.get(k),10)||(k==="f"?2:1)})}catch(e){QS={t:1,m:1,p:1,f:2}}
 var TITLE=TITLES[QS.t-1]||TITLES[0],NAMEFONT=NAMEF[QS.m-1]||NAMEF[0],PAL=PALS[QS.p-1]||PALS[0],TEXTFONT=TEXTF[QS.f-1]||TEXTF[1];
-(function(){
-  var r=document.documentElement.style,css="";
+var LOOKSTYLE=null,RAWSTYLE=null;
+function applyLooks(){
+  var r=document.documentElement.style,css="",def=(PAL===PALS[0]);
   css+="html,body,button,input,select,textarea{font-family:"+TEXTFONT[1]+",system-ui,sans-serif!important}";
   css+=".brand h1,.shead h2{font-family:"+TITLE[1]+",Georgia,serif!important}.plbl{font-family:"+NAMEFONT[1]+",Georgia,serif!important}";
-  if(PAL!==PALS[0]){
-    r.setProperty("--kraft",PAL.kraft);r.setProperty("--ink",PAL.ink);r.setProperty("--line",PAL.ink);r.setProperty("--cream",PAL.cream);r.setProperty("--paper",PAL.cream);
-    r.setProperty("--accent",PAL.accent);r.setProperty("--orange",PAL.accent);r.setProperty("--pink",PAL.sun);r.setProperty("--sun",PAL.sun);r.setProperty("--sun2",PAL.sun2);
+  r.setProperty("--kraft",PAL.kraft);r.setProperty("--ink",PAL.ink);r.setProperty("--line",PAL.ink);r.setProperty("--cream",PAL.cream);r.setProperty("--paper",PAL.cream);
+  r.setProperty("--accent",PAL.accent);r.setProperty("--orange",PAL.accent);r.setProperty("--pink",def?"#e2457f":PAL.sun);r.setProperty("--sun",PAL.sun);r.setProperty("--sun2",PAL.sun2);
+  if(!def){
     css+=".brand h1{text-shadow:2px 2px 0 "+PAL.sun+"!important}"
       +".plbl{text-shadow:0 0 3px "+PAL.land+",0 0 3px "+PAL.land+",0 0 3px "+PAL.land+",0 0 4px "+PAL.land+"!important}"
       +".maplibregl-ctrl-group button,.x,.card,.list button.item,.acct,.big.add,input[type=text],input[type=email],input[type=password],textarea,select,.maplibregl-ctrl-attrib{background:"+PAL.cream+"!important}"
       +".big.find{background:"+PAL.sun+"!important}";
   }
-  var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
-  document.addEventListener("DOMContentLoaded",function(){
-    var b=document.createElement("button");b.type="button";b.textContent="🎨 Looks";
-    b.style.cssText="position:fixed;left:14px;bottom:calc(250px + env(safe-area-inset-bottom,0px));z-index:14;border:3px solid var(--ink);background:var(--cream);color:var(--ink);font:700 13px 'DM Sans',sans-serif;padding:8px 12px;box-shadow:3px 3px 0 var(--ink);cursor:pointer";
-    var box=document.createElement("div");
-    box.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(300px + env(safe-area-inset-bottom,0px));z-index:14;background:var(--cream);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px;display:none;font:14px 'DM Sans',sans-serif";
-    function row(lbl,list,cur){var d=document.createElement("label");d.style.cssText="display:block;margin:0 0 8px;font-weight:700";d.textContent=lbl;var sel=document.createElement("select");sel.style.cssText="width:100%;margin-top:3px;padding:8px;font:inherit;border:2px solid var(--ink)";list.forEach(function(x,i){var o=document.createElement("option");o.value=i+1;o.textContent=(i+1)+" · "+(x.n||x[0]);if(i+1===cur)o.selected=true;sel.appendChild(o)});d.appendChild(sel);box.appendChild(d);return sel}
-    var st1=row("Title font",TITLES,QS.t),sm=row("Place-name font",NAMEF,QS.m),sp=row("Colours",PALS,QS.p),sf=row("Buttons & text font",TEXTF,QS.f);
-    var go=document.createElement("button");go.type="button";go.textContent="Show me";go.style.cssText="border:3px solid var(--ink);background:var(--accent);color:#fff;font:700 14px 'DM Sans',sans-serif;padding:9px 14px;cursor:pointer;width:100%";
-    go.onclick=function(){location.search="?t="+st1.value+"&m="+sm.value+"&p="+sp.value+"&f="+sf.value};
-    box.appendChild(go);
-    b.onclick=function(){box.style.display=box.style.display==="none"?"block":"none"};
-    document.body.appendChild(box);document.body.appendChild(b);
-  });
-})();
+  if(!LOOKSTYLE){LOOKSTYLE=document.createElement("style");document.head.appendChild(LOOKSTYLE)}
+  LOOKSTYLE.textContent=css;
+}
+applyLooks();
+function restyleMap(){
+  if(!RAWSTYLE||!map.setStyle)return;
+  try{map.setStyle(kraftStyle(JSON.parse(RAWSTYLE)));labelSig="";labelMiss=0}catch(e){}
+}
+function saveLooks(){try{history.replaceState(null,"","?t="+QS.t+"&m="+QS.m+"&p="+QS.p+"&f="+QS.f)}catch(e){}}
+document.addEventListener("DOMContentLoaded",function(){
+  var b=document.createElement("button");b.type="button";b.textContent="🎨 Looks";
+  b.style.cssText="position:fixed;left:14px;bottom:calc(250px + env(safe-area-inset-bottom,0px));z-index:14;border:3px solid var(--ink);background:var(--cream);color:var(--ink);font-weight:700;font-size:13px;padding:8px 12px;box-shadow:3px 3px 0 var(--ink);cursor:pointer";
+  var box=document.createElement("div");
+  box.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(112px + env(safe-area-inset-bottom,0px));z-index:14;background:var(--cream);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:10px;display:none";
+  var grid=document.createElement("div");grid.style.cssText="display:grid;grid-template-columns:1fr 1fr;gap:8px";
+  function row(lbl,list,cur,fn){
+    var d=document.createElement("label");d.style.cssText="display:block;font-weight:700;font-size:12px;margin:0";d.textContent=lbl;
+    var sel=document.createElement("select");sel.style.cssText="width:100%;margin-top:2px;padding:7px 6px;font-size:13px;border:2px solid var(--ink);border-radius:0";
+    list.forEach(function(x,i){var o=document.createElement("option");o.value=i+1;o.textContent=(i+1)+" · "+(x.n||x[0]);if(i+1===cur)o.selected=true;sel.appendChild(o)});
+    sel.addEventListener("change",function(){fn(parseInt(sel.value,10));saveLooks()});
+    d.appendChild(sel);grid.appendChild(d);return sel;
+  }
+  row("Title font",TITLES,QS.t,function(v){QS.t=v;TITLE=TITLES[v-1];applyLooks()});
+  row("Place names",NAMEF,QS.m,function(v){QS.m=v;NAMEFONT=NAMEF[v-1];applyLooks();labelSig="";try{map.fire("idle")}catch(e){}});
+  row("Colours",PALS,QS.p,function(v){QS.p=v;PAL=PALS[v-1];applyLooks();restyleMap()});
+  row("Buttons & text",TEXTF,QS.f,function(v){QS.f=v;TEXTFONT=TEXTF[v-1];applyLooks()});
+  var close=document.createElement("button");close.type="button";close.textContent="Done";
+  close.style.cssText="margin-top:10px;width:100%;border:3px solid var(--ink);background:var(--accent);color:#fff;font-weight:700;font-size:14px;padding:8px;cursor:pointer";
+  close.onclick=function(){box.style.display="none";b.style.display="block"};
+  box.appendChild(grid);box.appendChild(close);
+  b.onclick=function(){box.style.display="block";b.style.display="none"};
+  document.body.appendChild(box);document.body.appendChild(b);
+});
 
 var LABEL_LAYERS=[],labelMarkers=[],labelSig="",labelMiss=0,labelFallback=false;
 function kraftStyle(st){
@@ -357,7 +379,7 @@ function drawPlaceLabels(){
   });
 }
 var map=new maplibregl.Map({container:"map",style:{version:8,sources:{},layers:[{id:"bg",type:"background",paint:{"background-color":"#ead3a6"}}]},center:START,zoom:12,attributionControl:{compact:true}});
-fetch(STYLE_URL).then(function(r){return r.json()}).then(function(st){map.setStyle(kraftStyle(st))}).catch(function(){map.setStyle(STYLE_URL)});
+fetch(STYLE_URL).then(function(r){return r.json()}).then(function(st){RAWSTYLE=JSON.stringify(st);map.setStyle(kraftStyle(st))}).catch(function(){map.setStyle(STYLE_URL)});
 map.on("idle",drawPlaceLabels);
 map.addControl(new maplibregl.NavigationControl({showCompass:false}),"bottom-right");
 var geo=new maplibregl.GeolocateControl({positionOptions:{enableHighAccuracy:true},trackUserLocation:false});
@@ -369,7 +391,7 @@ map.on("zoom",pinScale);pinScale();
 
 function closeCredit(){var a=document.querySelector(".maplibregl-ctrl-attrib");if(a){a.classList.remove("maplibregl-compact-show");a.removeAttribute("open")}}
 map.on("load",closeCredit);setTimeout(closeCredit,600);setTimeout(closeCredit,2000);
-map.on("click",function(e){if(moving){doMove(e.lngLat);return}if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
+map.on("click",function(e){if(moving){if(movingMk)movingMk.setLngLat(e.lngLat);return}if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
 
 /* ---------- sheet ---------- */
 function openSheet(title,nodes){
@@ -460,8 +482,8 @@ function draw(){
     var ph0=(photos[p.id]||[])[0];
     var ring=h("div",{class:"ring"},[ph0?h("img",{src:photoUrl(ph0),alt:"",loading:"lazy",onerror:function(){this.remove();ring.textContent=c.icon}}):c.icon]);
     var el=h("div",{class:"pin"+(p.status!=="approved"?" pending":""),role:"button","aria-label":p.name,style:"--cc:var(--c-"+c.id+")"},[h("div",{class:"pw"},[h("div",{class:"tail"}),ring,p.independent?h("div",{class:"pstar",text:"★"}):null])]);
-    el.addEventListener("click",function(ev){ev.stopPropagation();if(!adding)openPlace(p)});
-    markers.push(new maplibregl.Marker({element:el,anchor:"bottom"}).setLngLat([p.lng,p.lat]).addTo(map));
+    el.addEventListener("click",function(ev){ev.stopPropagation();if(!adding&&!moving)openPlace(p)});
+    var mk=new maplibregl.Marker({element:el,anchor:"bottom"}).setLngLat([p.lng,p.lat]).addTo(map);mk._pid=p.id;markers.push(mk);
   });
 }
 function showTemp(){
@@ -599,18 +621,31 @@ function delPlace(p,btn){
 }
 
 /* ---------- owner: edit + move ---------- */
-var moving=null;
-function startMove(p){
-  closeSheet();moving=p;$("banner").textContent="Tap the map where "+p.name+" should be";$("banner").hidden=false;
-  map.flyTo({center:[p.lng,p.lat],zoom:Math.max(map.getZoom(),18)});
-  toast("Tap the exact spot");
+var moving=null,movingMk=null,moveBar=null;
+function endMove(){
+  if(movingMk)movingMk.setDraggable(false);
+  if(moveBar){moveBar.remove();moveBar=null}
+  moving=null;movingMk=null;$("banner").hidden=true;$("banner").textContent="Tap the map where the place is";
 }
-function doMove(ll){
-  var p=moving;moving=null;$("banner").hidden=true;$("banner").textContent="Tap the map where the place is";
-  sb.from("places").update({lat:ll.lat,lng:ll.lng}).eq("id",p.id).then(function(r){
-    if(r.error){toast(errText(r.error));return}
-    toast("Moved!");loadPlaces();
+function startMove(p){
+  closeSheet();
+  var mk=markers.filter(function(m){return m._pid===p.id})[0];
+  if(!mk){toast("Couldn't find that pin on the map");return}
+  moving=p;movingMk=mk;mk.setDraggable(true);
+  $("banner").textContent="Drag the pin, or tap the map, to the right spot";$("banner").hidden=false;
+  map.flyTo({center:[p.lng,p.lat],zoom:Math.max(map.getZoom(),18)});
+  var save=h("button",{class:"btn pri",type:"button",text:"Save position"}),cancel=h("button",{class:"btn",type:"button",text:"Cancel"});
+  moveBar=h("div",{style:"position:fixed;left:12px;right:12px;bottom:calc(112px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;gap:10px;background:var(--cream);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:10px"},[save,cancel]);
+  save.style.flex="1";cancel.style.flex="1";
+  save.addEventListener("click",function(){
+    var ll=mk.getLngLat();save.disabled=true;
+    sb.from("places").update({lat:ll.lat,lng:ll.lng}).eq("id",p.id).then(function(r){
+      if(r.error){save.disabled=false;toast(errText(r.error));return}
+      endMove();toast("Moved!");loadPlaces();
+    });
   });
+  cancel.addEventListener("click",function(){mk.setLngLat([p.lng,p.lat]);endMove()});
+  document.body.appendChild(moveBar);
 }
 function openEditForm(p){
   var name=h("input",{type:"text",maxlength:"120",autocomplete:"off"});name.value=p.name||"";
