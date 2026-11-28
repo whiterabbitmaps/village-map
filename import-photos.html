@@ -41,8 +41,8 @@ document.getElementById("go").addEventListener("click",async function(){
       var imgs=DATA[old];
       for(var i=0;i<imgs.length;i++){
         var path=user.id+"/"+pl.id+"-imp"+i+".jpg";
-        var u=await sb.storage.from("photos").upload(path,toBlob(imgs[i]),{contentType:"image/jpeg",upsert:true});
-        if(u.error)throw u.error;
+        var u=await sb.storage.from("photos").upload(path,toBlob(imgs[i]),{contentType:"image/jpeg"});
+        if(u.error&&!/exist|duplicate/i.test(u.error.message||""))throw u.error;
         var q=await sb.from("place_photos").insert({place_id:pl.id,path:path});
         if(q.error)throw q.error;
       }
