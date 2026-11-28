@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Village Map">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Rye&family=Caprasimo&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Alfa+Slab+One&family=Shrikhand&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 :root{--kraft:#d8b283;--ink:#2a1810;--cream:#fff2d8;--paper:#fff2d8;--accent:#d6402b;--line:#2a1810;--mut:#6a4636;--pink:#e2457f}
@@ -19,7 +19,7 @@ html,body{margin:0;height:100%;background:var(--kraft);color:var(--ink);font:16p
 button,input,select,textarea{font:inherit;color:inherit}
 header{position:fixed;top:0;left:0;right:0;z-index:20;background:var(--kraft);border-bottom:3px solid var(--line);padding:calc(8px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-left,0px)) 8px max(14px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:10px}
 .brand{flex:1;min-width:0}
-.brand h1{font:400 30px/1 Rye,Georgia,serif;margin:0;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:2px 2px 0 #ee7aa3}
+.brand h1{font:400 30px/1 'Alfa Slab One',Georgia,serif;margin:0;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:2px 2px 0 #ee7aa3}
 .brand p{margin:2px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
 .acct{border:2px solid var(--line);background:var(--cream);border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--line)}
 #chips{position:fixed;top:calc(64px + env(safe-area-inset-top,0px));left:0;right:0;z-index:15;display:flex;gap:8px;overflow-x:auto;padding:8px max(14px,env(safe-area-inset-left,0px));scrollbar-width:none}
@@ -44,7 +44,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:20;background:var(--kraft);bo
 #sheet{background-image:none;position:fixed;left:0;right:0;bottom:0;z-index:40;max-height:86vh;overflow-y:auto;background:var(--kraft);border:3px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:6px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 0 rgba(43,26,16,.2)}
 .grab{width:44px;height:5px;border-radius:3px;background:var(--line);opacity:.35;margin:6px auto 10px}
 .shead{display:flex;align-items:center;gap:8px}
-.shead h2{flex:1;margin:0;font:400 24px/1.1 Rye,Georgia,serif}
+.shead h2{flex:1;margin:0;font:400 24px/1.1 'Alfa Slab One',Georgia,serif}
 .x{border:2px solid var(--line);background:var(--cream);border-radius:50%;width:36px;height:36px;font-size:22px;line-height:1;cursor:pointer}
 label{display:block;font-weight:700;font-size:14px;margin:12px 0 4px}
 input[type=text],input[type=email],input[type=password],textarea,select{width:100%;border:2px solid var(--line);border-radius:10px;padding:10px;background:#fff}
@@ -82,7 +82,7 @@ header{display:block;overflow:hidden;padding:calc(14px + env(safe-area-inset-top
 header::before{content:"";position:absolute;right:-50px;top:-70px;width:230px;height:230px;border-radius:50%;background:var(--sun);z-index:0}
 header::after{content:"";position:absolute;right:-20px;top:-40px;width:170px;height:170px;border-radius:50%;background:var(--sun2);z-index:0}
 header>*{position:relative;z-index:1}
-.brand h1{font:400 clamp(34px,11vw,52px)/.95 Rye,Georgia,serif;text-transform:uppercase;letter-spacing:1px;text-shadow:none;overflow:visible;white-space:normal}
+.brand h1{font:400 clamp(30px,9vw,46px)/.95 'Alfa Slab One',Georgia,serif;text-transform:uppercase;letter-spacing:1px;text-shadow:none;overflow:visible;white-space:normal}
 .brand p{margin:8px 0 0;font-size:11px;letter-spacing:.2em}
 .acct{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:10px;z-index:2;border:2px solid var(--ink);border-radius:2px;background:#fff;box-shadow:none;padding:5px 10px;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
 #chips{padding:10px max(18px,env(safe-area-inset-left,0px)) 12px;gap:12px;align-items:center;background:var(--kraft)}
@@ -115,7 +115,7 @@ input[type=text],input[type=email],input[type=password],textarea,select{border-r
 #banner{background:var(--ink);color:#fff;border:3px solid #fff;border-radius:2px;box-shadow:4px 4px 0 var(--orange)}
 .maplibregl-marker.pin,.maplibregl-marker.plbl{position:absolute!important;top:0;left:0}
 .pin .pw{position:absolute;left:0;top:0;width:46px;height:54px;transform-origin:50% 100%;transform:scale(var(--ps,1))}
-.plbl{white-space:nowrap;pointer-events:none;z-index:1;font-family:Caprasimo,"Cooper Black",Georgia,serif;font-weight:400;color:var(--ink);letter-spacing:.02em;line-height:1;text-shadow:0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 4px #ead3a6}
+.plbl{white-space:nowrap;pointer-events:none;z-index:1;font-family:Shrikhand,"Cooper Black",Georgia,serif;font-weight:400;color:var(--ink);letter-spacing:.02em;line-height:1;text-shadow:0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 3px #ead3a6,0 0 4px #ead3a6}
 .pin{z-index:3}
 </style>
 </head>
@@ -126,7 +126,7 @@ input[type=text],input[type=email],input[type=password],textarea,select{border-r
 </header>
 <div id="chips" role="toolbar" aria-label="Filters"></div>
 <div id="map"></div>
-<svg class="compass" viewBox="-30 -30 60 60" aria-hidden="true"><circle r="22" fill="#fffafb" stroke="#3b1f4a" stroke-width="2.5"/><path d="M0-27V27M-27 0H27" stroke="#3b1f4a" stroke-width="2"/><path d="M0-20L6 0 0 20-6 0Z" fill="#e8467c" stroke="#3b1f4a" stroke-width="1.5"/><text x="0" y="-31" font-family="Rye,serif" font-size="10" text-anchor="middle" fill="#3b1f4a">N</text></svg>
+<svg class="compass" viewBox="-30 -30 60 60" aria-hidden="true"><circle r="22" fill="#fffafb" stroke="#3b1f4a" stroke-width="2.5"/><path d="M0-27V27M-27 0H27" stroke="#3b1f4a" stroke-width="2"/><path d="M0-20L6 0 0 20-6 0Z" fill="#e8467c" stroke="#3b1f4a" stroke-width="1.5"/><text x="0" y="-31" font-family="Alfa Slab One,serif" font-size="10" text-anchor="middle" fill="#3b1f4a">N</text></svg>
 <div id="banner" hidden>Tap the map where the place is</div>
 <div id="dock">
   <button class="big find" id="findBtn" type="button">Find the good stuff</button>
