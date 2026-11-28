@@ -319,6 +319,8 @@ map.addControl(geo,"bottom-right");
 geo.on("geolocate",function(e){here={lat:e.coords.latitude,lng:e.coords.longitude}});
 function pinScale(){var z=map.getZoom(),s=Math.max(.35,Math.min(1,.35+(z-4)*.059));document.documentElement.style.setProperty("--ps",s.toFixed(3))}
 map.on("zoom",pinScale);pinScale();
+function closeCredit(){var a=document.querySelector(".maplibregl-ctrl-attrib");if(a){a.classList.remove("maplibregl-compact-show");a.removeAttribute("open")}}
+map.on("load",closeCredit);setTimeout(closeCredit,600);setTimeout(closeCredit,2000);
 map.on("click",function(e){if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
 
 /* ---------- sheet ---------- */
