@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Village Map">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Alfa+Slab+One&family=Shrikhand&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Alfa+Slab+One&family=Shrikhand&family=Caprasimo&family=Rye&family=Bebas+Neue&family=Caveat+Brush&family=Young+Serif&family=Abril+Fatface&family=Bevan&family=Ultra&family=Titan+One&family=Rammetto+One&family=Chango&family=Courier+Prime:wght@400;700&family=Fredoka:wght@500;600&family=Kalam:wght@700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <style>
 :root{--kraft:#d8b283;--ink:#2a1810;--cream:#fff2d8;--paper:#fff2d8;--accent:#d6402b;--line:#2a1810;--mut:#6a4636;--pink:#e2457f}
@@ -207,10 +207,53 @@ layout();
 
 /* ---------- map ---------- */
 var STYLE_URL="https://tiles.openfreemap.org/styles/positron";
+/* ---------- looks: titles, place-name fonts, colours (temporary trial picker) ---------- */
+var TITLES=[["Alfa Slab One","'Alfa Slab One'"],["Shrikhand","Shrikhand"],["Rye (original)","Rye"],["Abril Fatface","'Abril Fatface'"],["Bevan","Bevan"],["Ultra","Ultra"],["Titan One","'Titan One'"],["Rammetto One","'Rammetto One'"],["Chango","Chango"]];
+var NAMEF=[["Shrikhand","Shrikhand"],["Caprasimo","Caprasimo"],["Alfa Slab One","'Alfa Slab One'"],["Young Serif","'Young Serif'"],["Bebas Neue","'Bebas Neue'"],["Caveat Brush","'Caveat Brush'"],["Courier Prime","'Courier Prime'"]];
+var TEXTF=[["DM Sans (before)","'DM Sans'"],["Courier Prime","'Courier Prime'"],["Fredoka","Fredoka"],["Kalam","Kalam"]];
+var PALS=[
+ {n:"Kraft & Berry (now)",kraft:"#d8b283",ink:"#2a1810",cream:"#fff2d8",accent:"#d6402b",sun:"#ee7aa3",sun2:"#f6a9c4",land:"#ead3a6",water:"#e2457f",park:"#6aa062",bld:"#e8b99a",road:"#fff6e2",casing:"#c9482f",rn:"#a81f55"},
+ {n:"Seaside",kraft:"#f2d9a8",ink:"#163a5a",cream:"#fff6e2",accent:"#e2573b",sun:"#ff8a65",sun2:"#ffb59c",land:"#f6e7c1",water:"#2e8fb8",park:"#7fb77e",bld:"#f2c9a0",road:"#fffaf0",casing:"#e2765a",rn:"#1f6f8f"},
+ {n:"Orchard",kraft:"#cfd9a0",ink:"#23402a",cream:"#fbf7de",accent:"#d9542c",sun:"#f4b942",sun2:"#f8d58a",land:"#e8edc3",water:"#4f9fb0",park:"#77b255",bld:"#e2d3a0",road:"#fffdf0",casing:"#8a9a4a",rn:"#2f6b3a"},
+ {n:"Plum & Mustard",kraft:"#e8c06b",ink:"#3b1f4a",cream:"#fff3d6",accent:"#7a3b9c",sun:"#d9468f",sun2:"#ef8fba",land:"#f3dfa6",water:"#8b4fa8",park:"#9bb35a",bld:"#efc58a",road:"#fff6dc",casing:"#b5651d",rn:"#6a2c82"},
+ {n:"Terracotta Sky",kraft:"#e9b99a",ink:"#4a2330",cream:"#fff1e3",accent:"#cf5a3c",sun:"#f2a65a",sun2:"#f7c79a",land:"#f4d7bd",water:"#5aa5c8",park:"#86b07a",bld:"#e8a98a",road:"#fff4e8",casing:"#cf5a3c",rn:"#b04a3a"},
+ {n:"Blossom",kraft:"#f4c6d1",ink:"#4a2640",cream:"#fff5f0",accent:"#d9467a",sun:"#ffd166",sun2:"#ffe29a",land:"#fbe5d6",water:"#6aa7d8",park:"#9cc58a",bld:"#f3c3b6",road:"#fffaf5",casing:"#d96a8a",rn:"#c23b72"},
+ {n:"Lemon & Teal",kraft:"#f3e08a",ink:"#0f4c5c",cream:"#fffbe6",accent:"#e36414",sun:"#2a9d8f",sun2:"#7fcdc3",land:"#f8edb5",water:"#2a9d8f",park:"#8ac26b",bld:"#f1cf8a",road:"#fffdf2",casing:"#e36414",rn:"#0f4c5c"}
+];
+var QS={};try{var _u=new URLSearchParams(location.search);["t","m","p","f"].forEach(function(k){QS[k]=parseInt(_u.get(k),10)||(k==="f"?2:1)})}catch(e){QS={t:1,m:1,p:1,f:2}}
+var TITLE=TITLES[QS.t-1]||TITLES[0],NAMEFONT=NAMEF[QS.m-1]||NAMEF[0],PAL=PALS[QS.p-1]||PALS[0],TEXTFONT=TEXTF[QS.f-1]||TEXTF[1];
+(function(){
+  var r=document.documentElement.style,css="";
+  css+="html,body,button,input,select,textarea{font-family:"+TEXTFONT[1]+",system-ui,sans-serif!important}";
+  css+=".brand h1,.shead h2{font-family:"+TITLE[1]+",Georgia,serif!important}.plbl{font-family:"+NAMEFONT[1]+",Georgia,serif!important}";
+  if(PAL!==PALS[0]){
+    r.setProperty("--kraft",PAL.kraft);r.setProperty("--ink",PAL.ink);r.setProperty("--line",PAL.ink);r.setProperty("--cream",PAL.cream);r.setProperty("--paper",PAL.cream);
+    r.setProperty("--accent",PAL.accent);r.setProperty("--orange",PAL.accent);r.setProperty("--pink",PAL.sun);r.setProperty("--sun",PAL.sun);r.setProperty("--sun2",PAL.sun2);
+    css+=".brand h1{text-shadow:2px 2px 0 "+PAL.sun+"!important}"
+      +".plbl{text-shadow:0 0 3px "+PAL.land+",0 0 3px "+PAL.land+",0 0 3px "+PAL.land+",0 0 4px "+PAL.land+"!important}"
+      +".maplibregl-ctrl-group button,.x,.card,.list button.item,.acct,.big.add,input[type=text],input[type=email],input[type=password],textarea,select,.maplibregl-ctrl-attrib{background:"+PAL.cream+"!important}"
+      +".big.find{background:"+PAL.sun+"!important}";
+  }
+  var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
+  document.addEventListener("DOMContentLoaded",function(){
+    var b=document.createElement("button");b.type="button";b.textContent="🎨 Looks";
+    b.style.cssText="position:fixed;left:14px;bottom:calc(250px + env(safe-area-inset-bottom,0px));z-index:40;border:3px solid var(--ink);background:var(--cream);color:var(--ink);font:700 13px 'DM Sans',sans-serif;padding:8px 12px;box-shadow:3px 3px 0 var(--ink);cursor:pointer";
+    var box=document.createElement("div");
+    box.style.cssText="position:fixed;left:12px;right:12px;bottom:calc(300px + env(safe-area-inset-bottom,0px));z-index:41;background:var(--cream);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);padding:12px;display:none;font:14px 'DM Sans',sans-serif";
+    function row(lbl,list,cur){var d=document.createElement("label");d.style.cssText="display:block;margin:0 0 8px;font-weight:700";d.textContent=lbl;var sel=document.createElement("select");sel.style.cssText="width:100%;margin-top:3px;padding:8px;font:inherit;border:2px solid var(--ink)";list.forEach(function(x,i){var o=document.createElement("option");o.value=i+1;o.textContent=(i+1)+" · "+(x.n||x[0]);if(i+1===cur)o.selected=true;sel.appendChild(o)});d.appendChild(sel);box.appendChild(d);return sel}
+    var st1=row("Title font",TITLES,QS.t),sm=row("Place-name font",NAMEF,QS.m),sp=row("Colours",PALS,QS.p),sf=row("Buttons & text font",TEXTF,QS.f);
+    var go=document.createElement("button");go.type="button";go.textContent="Show me";go.style.cssText="border:3px solid var(--ink);background:var(--accent);color:#fff;font:700 14px 'DM Sans',sans-serif;padding:9px 14px;cursor:pointer;width:100%";
+    go.onclick=function(){location.search="?t="+st1.value+"&m="+sm.value+"&p="+sp.value+"&f="+sf.value};
+    box.appendChild(go);
+    b.onclick=function(){box.style.display=box.style.display==="none"?"block":"none"};
+    document.body.appendChild(box);document.body.appendChild(b);
+  });
+})();
+
 var LABEL_LAYERS=[],labelMarkers=[],labelSig="",labelMiss=0,labelFallback=false;
 function kraftStyle(st){
   LABEL_LAYERS=[];
-  var C={land:"#ead3a6",water:"#e2457f",park:"#6aa062",bld:"#e8b99a",road:"#fff6e2",casing:"#c9482f",ink:"#2a1810",rn:"#a81f55"};
+  var C={land:PAL.land,water:PAL.water,park:PAL.park,bld:PAL.bld,road:PAL.road,casing:PAL.casing,ink:PAL.ink,rn:PAL.rn};
   function W(a,b,c){return ["interpolate",["exponential",1.55],["zoom"],8,a,13,b,18,c]}
   st.layers.forEach(function(l){
     var sl=l["source-layer"]||"",id=l.id||"",p=l.paint=l.paint||{};
@@ -319,6 +362,8 @@ map.addControl(geo,"bottom-right");
 geo.on("geolocate",function(e){here={lat:e.coords.latitude,lng:e.coords.longitude}});
 function pinScale(){var z=map.getZoom(),s=Math.max(.35,Math.min(1,.35+(z-4)*.059));document.documentElement.style.setProperty("--ps",s.toFixed(3))}
 map.on("zoom",pinScale);pinScale();
+
+
 function closeCredit(){var a=document.querySelector(".maplibregl-ctrl-attrib");if(a){a.classList.remove("maplibregl-compact-show");a.removeAttribute("open")}}
 map.on("load",closeCredit);setTimeout(closeCredit,600);setTimeout(closeCredit,2000);
 map.on("click",function(e){if(adding){tempLL=e.lngLat;showTemp();openAddForm()}});
